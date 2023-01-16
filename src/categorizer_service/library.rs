@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fs::DirEntry, path::Path};
 
 use regex::Regex;
+use serde::{ser::SerializeStruct, Serialize};
 
 pub enum Rating {
     OutOfTen(i32),
@@ -9,10 +10,43 @@ pub enum Rating {
     OutOfFiveDecimal(f32),
 }
 
+impl Serialize for Rating {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Rating::OutOfTen(x) => serializer.serialize_newtype_variant("Rating", 0, "OutOfTen", x),
+            Rating::OutOfFive(x) => {
+                serializer.serialize_newtype_variant("Rating", 1, "OutOfFive", x)
+            }
+            Rating::OutOfTenDecimal(x) => {
+                serializer.serialize_newtype_variant("Rating", 2, "OutOfTenDecimal", x)
+            }
+            Rating::OutOfFiveDecimal(x) => {
+                serializer.serialize_newtype_variant("Rating", 3, "OutOfFiveDecimal", x)
+            }
+        }
+    }
+}
+
 pub enum Status {
     IN_PROGRESS,
     HAITUS,
     COMPLETE,
+}
+
+impl Serialize for Status {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Status::IN_PROGRESS => serializer.serialize_unit_variant("Status", 0, "IN_PROGRESS"),
+            Status::HAITUS => serializer.serialize_unit_variant("Status", 1, "HAITUS"),
+            Status::COMPLETE => serializer.serialize_unit_variant("Status", 2, "COMPLETE"),
+        }
+    }
 }
 
 pub struct Tag {
@@ -42,8 +76,30 @@ pub struct Chapter {
     chapter_number: i32,
 }
 
+impl Serialize for Chapter {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("Chapter", 1)?;
+        state.serialize_field("chapter_number", &self.chapter_number)?;
+        state.end()
+    }
+}
+
 pub struct Library {
     series: Vec<Series>,
+}
+
+impl Serialize for Library {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("Library", 1)?;
+        state.serialize_field("series", &self.series)?;
+        state.end()
+    }
 }
 
 impl Library {
@@ -73,6 +129,22 @@ impl Series {
             tags,
             chapters,
         }
+    }
+}
+
+impl Serialize for Series {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("Series", 6)?;
+        state.serialize_field("title", &self.title);
+        state.serialize_field("rating", &self.rating);
+        state.serialize_field("number_of_chapters", &self.number_of_chapters);
+        state.serialize_field("status", &self.status);
+        //state.serialize_field("tags", self.)
+        state.serialize_field("chapters", &self.chapters);
+        state.end()
     }
 }
 
@@ -174,3 +246,5 @@ pub fn build_library() {
         Err(e) => println!("{:?}", e),
     }
 }
+
+pub fn serialize_to_disk(library: Library) {}
