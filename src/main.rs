@@ -9,4 +9,7 @@ fn main() {
         Ok(()) => println!("Wrote to disk"),
         Err(e) => println!("Unable to write to disk: {:?}", e),
     }
+
+    let library = categorizer_service::library::deserialize_from_disk().unwrap();
+    println!("{}", library);
 }

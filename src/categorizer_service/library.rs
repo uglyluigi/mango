@@ -1,8 +1,14 @@
-use std::{collections::HashMap, fs::DirEntry, io::BufWriter, path::Path};
+use std::{
+    collections::HashMap,
+    fs::DirEntry,
+    io::{self, BufRead, BufReader, BufWriter, Write},
+    path::Path, fmt::Display,
+};
 
 use regex::Regex;
-use serde::{ser::SerializeStruct, Serialize};
+use serde::{ser::SerializeStruct, Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub enum Rating {
     OutOfTen(i32),
     OutOfFive(i32),
@@ -10,49 +16,19 @@ pub enum Rating {
     OutOfFiveDecimal(f32),
 }
 
-impl Serialize for Rating {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match self {
-            Rating::OutOfTen(x) => serializer.serialize_newtype_variant("Rating", 0, "OutOfTen", x),
-            Rating::OutOfFive(x) => {
-                serializer.serialize_newtype_variant("Rating", 1, "OutOfFive", x)
-            }
-            Rating::OutOfTenDecimal(x) => {
-                serializer.serialize_newtype_variant("Rating", 2, "OutOfTenDecimal", x)
-            }
-            Rating::OutOfFiveDecimal(x) => {
-                serializer.serialize_newtype_variant("Rating", 3, "OutOfFiveDecimal", x)
-            }
-        }
-    }
-}
-
+#[derive(Serialize, Deserialize)]
 pub enum Status {
     IN_PROGRESS,
     HAITUS,
     COMPLETE,
 }
 
-impl Serialize for Status {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match self {
-            Status::IN_PROGRESS => serializer.serialize_unit_variant("Status", 0, "IN_PROGRESS"),
-            Status::HAITUS => serializer.serialize_unit_variant("Status", 1, "HAITUS"),
-            Status::COMPLETE => serializer.serialize_unit_variant("Status", 2, "COMPLETE"),
-        }
-    }
-}
-
+#[derive(Serialize, Deserialize)]
 pub struct Tag {
     tag: String,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Tags {
     tags: Vec<Tag>,
 }
@@ -63,6 +39,7 @@ impl Tags {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Series {
     title: String,
     rating: Rating,
@@ -72,33 +49,20 @@ pub struct Series {
     chapters: Vec<Chapter>,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Chapter {
     chapter_number: i32,
 }
 
-impl Serialize for Chapter {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("Chapter", 1)?;
-        state.serialize_field("chapter_number", &self.chapter_number)?;
-        state.end()
-    }
-}
-
+#[derive(Serialize, Deserialize)]
 pub struct Library {
     series: Vec<Series>,
 }
 
-impl Serialize for Library {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("Library", 1)?;
-        state.serialize_field("series", &self.series)?;
-        state.end()
+impl Display for Library {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // May be kind of slow. Maybe memoize somehow later
+        write!(f, "{}", serde_json::to_string_pretty(&self).unwrap())
     }
 }
 
@@ -129,22 +93,6 @@ impl Series {
             tags,
             chapters,
         }
-    }
-}
-
-impl Serialize for Series {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("Series", 6)?;
-        state.serialize_field("title", &self.title)?;
-        state.serialize_field("rating", &self.rating)?;
-        state.serialize_field("number_of_chapters", &self.number_of_chapters)?;
-        state.serialize_field("status", &self.status)?;
-        //state.serialize_field("tags", self.)
-        state.serialize_field("chapters", &self.chapters)?;
-        state.end()
     }
 }
 
@@ -239,7 +187,7 @@ pub fn build_library() -> Library {
                             chapters,
                         ));
                     }
-                    Err(e) => todo!(),
+                    Err(e) => println!("{:?}", e),
                 }
             }
         }
@@ -248,12 +196,26 @@ pub fn build_library() -> Library {
     library
 }
 
-pub fn serialize_to_disk(library: Library) -> bincode::Result<()> {
-    match std::fs::File::create("library.mlf") {
-        Ok(f) => {
-            let mut f = BufWriter::new(f);
-            bincode::serialize_into(&mut f, &library)
-        },
-        Err(e) => bincode::Result::Err(Box::new(bincode::ErrorKind::Io(e))),
+const LIBRARY_FILE_NAME: &'static str = "library.json";
+
+pub fn serialize_to_disk(library: Library) -> io::Result<()> {
+    let f = std::fs::File::create(LIBRARY_FILE_NAME)?;
+    let mut f = BufWriter::new(f);
+
+    match serde_json::to_string(&library) {
+        Ok(library_json) => f.write_all(library_json.as_bytes()),
+        Err(e) => Err(io::Error::from(e)),
     }
+}
+
+pub fn deserialize_from_disk() -> io::Result<Library> {
+    let bytes = std::fs::read("library.json")?;
+    let library: Library = serde_json::from_str(
+        String::from_utf8(bytes)
+            .expect("Failed to read library file into utf8 string")
+            .as_str(),
+    )
+    .expect("Failed to deserialize library struct from library file");
+
+    Ok(library)
 }
