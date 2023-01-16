@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::DirEntry, path::Path};
+use std::{collections::HashMap, fs::DirEntry, io::BufWriter, path::Path};
 
 use regex::Regex;
 use serde::{ser::SerializeStruct, Serialize};
@@ -138,17 +138,17 @@ impl Serialize for Series {
         S: serde::Serializer,
     {
         let mut state = serializer.serialize_struct("Series", 6)?;
-        state.serialize_field("title", &self.title);
-        state.serialize_field("rating", &self.rating);
-        state.serialize_field("number_of_chapters", &self.number_of_chapters);
-        state.serialize_field("status", &self.status);
+        state.serialize_field("title", &self.title)?;
+        state.serialize_field("rating", &self.rating)?;
+        state.serialize_field("number_of_chapters", &self.number_of_chapters)?;
+        state.serialize_field("status", &self.status)?;
         //state.serialize_field("tags", self.)
-        state.serialize_field("chapters", &self.chapters);
+        state.serialize_field("chapters", &self.chapters)?;
         state.end()
     }
 }
 
-pub fn build_library() {
+pub fn build_library() -> Library {
     let library_dir = Path::new("./MangaLibrary");
     let mut library = Library::new();
 
@@ -245,6 +245,15 @@ pub fn build_library() {
         }
         Err(e) => println!("{:?}", e),
     }
+    library
 }
 
-pub fn serialize_to_disk(library: Library) {}
+pub fn serialize_to_disk(library: Library) -> bincode::Result<()> {
+    match std::fs::File::create("library.mlf") {
+        Ok(f) => {
+            let mut f = BufWriter::new(f);
+            bincode::serialize_into(&mut f, &library)
+        },
+        Err(e) => bincode::Result::Err(Box::new(bincode::ErrorKind::Io(e))),
+    }
+}
