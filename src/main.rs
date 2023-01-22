@@ -11,5 +11,6 @@ fn main() {
     }
 
     let library = categorizer_service::library::deserialize_from_disk().unwrap();
+    ui::show();
     println!("{}", library);
 }

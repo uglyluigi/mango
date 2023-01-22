@@ -1,8 +1,9 @@
 use std::{
     collections::HashMap,
+    fmt::Display,
     fs::DirEntry,
     io::{self, BufRead, BufReader, BufWriter, Write},
-    path::Path, fmt::Display,
+    path::{Path, PathBuf},
 };
 
 use regex::Regex;
@@ -47,6 +48,7 @@ pub struct Series {
     status: Status,
     tags: Tags,
     chapters: Vec<Chapter>,
+    covers: Vec<Cover>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -74,6 +76,10 @@ impl Library {
     pub fn add_series(&mut self, series: Series) {
         self.series.push(series);
     }
+
+    pub fn series(&self) -> &Vec<Series> {
+        &self.series
+    }
 }
 
 impl Series {
@@ -84,6 +90,7 @@ impl Series {
         status: Status,
         tags: Tags,
         chapters: Vec<Chapter>,
+        covers: Vec<Cover>,
     ) -> Self {
         Self {
             title,
@@ -92,7 +99,27 @@ impl Series {
             status,
             tags,
             chapters,
+            covers,
         }
+    }
+
+    pub fn chapters(&self) -> &Vec<Chapter> {
+        &self.chapters
+    }
+
+    pub fn covers(&self) -> &Vec<Cover> {
+        &self.covers
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Cover {
+    pub path: PathBuf,
+}
+
+impl Cover {
+    pub fn new(path: PathBuf) -> Self {
+        Self { path }
     }
 }
 
@@ -109,9 +136,6 @@ pub fn build_library() -> Library {
                     return (match dir.file_name().into_string() {
                         Ok(name) => !(name.starts_with(".")),
                         _ => false,
-                    } || match dir.file_type() {
-                        Ok(file_type) => (file_type.is_dir()),
-                        _ => false,
                     });
                 }
                 _ => false,
@@ -124,6 +148,7 @@ pub fn build_library() -> Library {
 
                         println!("Logging series: {}", series_name);
                         let mut chapters = Vec::new();
+                        let mut covers = Vec::new();
 
                         match dir_entry.path().read_dir() {
                             Ok(chapter_dirs) => {
@@ -131,9 +156,6 @@ pub fn build_library() -> Library {
                                     Ok(dir) => {
                                         return (match dir.file_name().into_string() {
                                             Ok(name) => !(name.starts_with(".")),
-                                            _ => false,
-                                        } || match dir.file_type() {
-                                            Ok(file_type) => (file_type.is_dir()),
                                             _ => false,
                                         });
                                     }
@@ -143,31 +165,44 @@ pub fn build_library() -> Library {
                                 for chapter_dir in chapter_dirs {
                                     match chapter_dir {
                                         Ok(file) => match file.file_name().into_string() {
-                                            Ok(chapter_folder_name) => {
-                                                println!(
-                                                    "chapter_folder_name: {}",
-                                                    chapter_folder_name
-                                                );
-                                                let re =
-                                                    Regex::new(r"((c|Ch(.*)( |\.))?([0-9]+))(.+)?")
+                                            Ok(file_name) => {
+                                                const CHAPTER_FOLDER_REGEX: &'static str =
+                                                    r"((c|Ch(.*)( |\.))?([0-9]+))(.+)?";
+                                                const COVER_IMAGE_REGEX: &'static str =
+                                                    r"([cC]over)(\.(jpe?g|png))?";
+
+                                                // this should probably just panic if my regexes are bad tbh
+                                                let chapter_matcher =
+                                                    Regex::new(CHAPTER_FOLDER_REGEX)
+                                                        .expect("Failed to compile regex");
+
+                                                let cover_matcher = Regex::new(COVER_IMAGE_REGEX)
+                                                    .expect("Failed to compile regex");
+
+                                                let chapter_caps =
+                                                    chapter_matcher.captures(&file_name);
+
+                                                if let Some(caps) = chapter_caps {
+                                                    let chapter_number = caps
+                                                        .get(5)
+                                                        .unwrap()
+                                                        .as_str()
+                                                        .parse::<i32>()
                                                         .unwrap();
 
-                                                let caps =
-                                                    re.captures(&chapter_folder_name).unwrap();
+                                                    println!(
+                                                        "Logging chapter {} of series {}",
+                                                        chapter_number, series_name
+                                                    );
 
-                                                let chapter_number = caps
-                                                    .get(5)
-                                                    .unwrap()
-                                                    .as_str()
-                                                    .parse::<i32>()
-                                                    .unwrap();
+                                                    chapters.push(Chapter { chapter_number });
+                                                }
 
-                                                println!(
-                                                    "Logging chapter {} of series {}",
-                                                    chapter_number, series_name
-                                                );
+                                                let cover_caps = cover_matcher.captures(&file_name);
 
-                                                chapters.push(Chapter { chapter_number })
+                                                if let Some(caps) = cover_caps {
+                                                    covers.push(Cover::new(file.path()));
+                                                }
                                             }
                                             Err(e) => println!("Err reading dir name: {:?}", e),
                                         },
@@ -185,6 +220,7 @@ pub fn build_library() -> Library {
                             Status::IN_PROGRESS,
                             Tags::new(),
                             chapters,
+                            covers
                         ));
                     }
                     Err(e) => println!("{:?}", e),
