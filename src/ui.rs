@@ -1,61 +1,93 @@
 use std::path::Path;
 
-use gtk::builders::{GridBuilder, ImageBuilder, PictureBuilder};
-use gtk::ffi::{GtkImage, GtkPicture};
+use gtk::builders::{BoxBuilder, GridBuilder, ImageBuilder, PictureBuilder};
+use gtk::ffi::{GtkImage, GtkPicture, GtkWidget};
 use gtk::gdk::Texture;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::{prelude::GLAreaExt, Application, ApplicationWindow};
-use gtk::{prelude::*, Image, Label};
+use gtk::{prelude::*, Grid, Image, GestureClick, EventController};
 
+use crate::categorizer_service;
 use crate::categorizer_service::library::Library;
 
 const APP_ID: &str = "uglyluigi.Mango";
 const DEFAULT_WIDTH: i32 = 1000;
 const DEFAULT_HEIGHT: i32 = 500;
 
+
 pub fn show() {
     let app = Application::builder().application_id(APP_ID).build();
 
     app.connect_activate(build_ui);
+    app.connect_shutdown(quit);
     app.run();
 }
 
-const COVER_PATH: &'static str = "./MangaLibrary/Mieruko-Chan/cover.jpg";
+fn quit(app: &Application) {}
 
 fn build_ui(app: &Application) {
-    let label: Label = Label::builder().label("Mango v0.0.1").build();
-
-    let img = ImageBuilder::new()
-        .file("cover.jpg")
-        .width_request(100)
-        .height_request(300)
-        .build();
     let library_grid = GridBuilder::new().build();
-    library_grid.attach(&img, 0, 0, 1, 1);
+
+    if let Ok(library) = categorizer_service::library::deserialize_from_disk() {
+        attach_covers(make_covers(&library), &library_grid);
+    }
 
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Mango")
         .default_width(DEFAULT_WIDTH)
         .default_height(DEFAULT_HEIGHT)
-        .child(&label)
         .child(&library_grid)
         .build();
 
     window.present();
 }
 
-pub fn make_covers(library: &Library) -> Vec<Image> {
+fn make_covers(library: &Library) -> Vec<Image> {
     let mut ret = Vec::new();
 
+    const HEIGHT: i32 = 200;
+    const WIDTH: i32 = ((HEIGHT as f32) * 0.703) as i32;
+
     for series in library.series() {
+        // todo multiple cover support
         let first_cover = &series.covers()[0];
-        ret.push(
-            ImageBuilder::new()
-                .file(first_cover.path.to_str().unwrap())
-                .build(),
-        );
+        let img = ImageBuilder::new()
+            .file(first_cover.path.to_str().unwrap())
+            .width_request(WIDTH)
+            .height_request(HEIGHT)
+            .build();
+
+        let gtk_box = BoxBuilder::new().build();
+        gtk_box.append(&img);
+        
+        let gesture = gtk::GestureClick::new();
+        gesture.set_button(gtk::gdk::ffi::GDK_BUTTON_PRIMARY as u32);
+
+        gesture.connect_pressed(|gesture, num_consecutive_clicks, x, y| {
+            gesture.set_state(gtk::EventSequenceState::Claimed);
+            println!("{} {} {}", num_consecutive_clicks, x, y);
+        });
+
+        img.add_controller(&gesture);
+        ret.push(img);
     }
 
     ret
+}
+
+fn make_event_controller() {
+
+}
+
+fn attach_covers(covers: Vec<Image>, grid: &Grid) {
+    let (mut row, mut col) = (0, 0);
+
+    const WIDTH: i32 = 1;
+    const HEIGHT: i32 = 1;
+
+    for cover in covers {
+        grid.attach(&cover, col, row, WIDTH, HEIGHT);
+        col = col + 1;
+    }
 }
