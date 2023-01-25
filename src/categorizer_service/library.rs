@@ -161,7 +161,7 @@ pub fn build_library(library_path: PathBuf) -> Library {
 
                         for chapter in chapters {
                             if deconstruct_buf(&chapter, COVER_IMAGE_REGEX).is_some() {
-                                series_builder.covers(vec![Cover::new(buf.clone())]);
+                                series_builder.covers(vec![Cover::new(chapter.clone())]);
                                 continue;
                             }
 

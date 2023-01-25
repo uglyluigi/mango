@@ -1,21 +1,76 @@
-use config::{builder::DefaultState, Config, ConfigBuilder, ConfigError, File, FileFormat};
+use std::{
+    io::{self, BufWriter, Write},
+    path::{Path, PathBuf},
+};
 
-pub fn build_config() {
-    match build_builder() {
-        Ok(config) => {
-            println!("Config built");
+use derive_getters::Getters;
+use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
+
+use crate::categorizer_service::library::Library;
+
+#[derive(Serialize, Deserialize)]
+pub enum Theme {
+    Dark,
+    Light,
+}
+
+impl Default for Theme {
+    fn default() -> Self {
+        Self::Light
+    }
+}
+
+#[derive(Serialize, Deserialize, Getters, Default)]
+pub struct Config {
+    theme: Theme,
+    max_columns: usize,
+    max_rows: usize,
+}
+
+lazy_static! {
+    pub static ref MANGO_CONFIG: Config = init_config();
+}
+
+const CONFIG_FILE_NAME: &'static str = "config.json";
+
+pub fn write_config(config: &Config) -> io::Result<()> {
+    let f = std::fs::File::create(CONFIG_FILE_NAME)?;
+    let mut f = BufWriter::new(f);
+
+    match serde_json::to_string(&config) {
+        Ok(json) => {
+            println!("Wrote config");
+            f.write_all(json.as_bytes())
         }
-        Err(e) => {
-            println!("Err initing config: {:?}", e);
+        Err(e) => Err(io::Error::from(e)),
+    }
+}
+
+fn init_config() -> Config {
+    let config_file_path = PathBuf::from(CONFIG_FILE_NAME);
+
+    if config_file_path.exists() {
+        println!("Reading present config");
+        read_config().expect("Error reading config file")
+    } else {
+        println!("No config file detected");
+        let config = Config::default();
+        match write_config(&config) {
+            Ok(_) => config,
+            Err(e) => panic!("Error writing config file: {:?}", e),
         }
     }
 }
 
-fn build_builder() -> Result<ConfigBuilder<DefaultState>, ConfigError> {
-    let builder = Config::builder()
-        .set_default("example_key", "big_chungus")?
-        .set_default("library_location", "~/Documents/Manga Library/")?
-        .add_source(File::new("config/settings", FileFormat::Toml));
+fn read_config() -> io::Result<Config> {
+    let bytes = std::fs::read(CONFIG_FILE_NAME)?;
+    let config: Config = serde_json::from_str(
+        String::from_utf8(bytes)
+            .expect("Failed to read library file into utf8 string")
+            .as_str(),
+    )
+    .expect("Failed to deserialize config struct from config file");
 
-    Ok(builder)
+    Ok(config)
 }
