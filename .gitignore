@@ -1,3 +1,5 @@
 /target
 .DS_Store
-*.jpg
+MangaLibrary/*
+library.json
+settings.json

@@ -5,7 +5,7 @@ use gtk::ffi::{GtkImage, GtkPicture, GtkWidget};
 use gtk::gdk::Texture;
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::{prelude::GLAreaExt, Application, ApplicationWindow};
-use gtk::{prelude::*, Grid, Image, GestureClick, EventController};
+use gtk::{prelude::*, EventController, GestureClick, Grid, Image};
 
 use crate::categorizer_service;
 use crate::categorizer_service::library::Library;
@@ -13,7 +13,6 @@ use crate::categorizer_service::library::Library;
 const APP_ID: &str = "uglyluigi.Mango";
 const DEFAULT_WIDTH: i32 = 1000;
 const DEFAULT_HEIGHT: i32 = 500;
-
 
 pub fn show() {
     let app = Application::builder().application_id(APP_ID).build();
@@ -60,7 +59,7 @@ fn make_covers(library: &Library) -> Vec<Image> {
 
         let gtk_box = BoxBuilder::new().build();
         gtk_box.append(&img);
-        
+
         let gesture = gtk::GestureClick::new();
         gesture.set_button(gtk::gdk::ffi::GDK_BUTTON_PRIMARY as u32);
 
@@ -76,9 +75,7 @@ fn make_covers(library: &Library) -> Vec<Image> {
     ret
 }
 
-fn make_event_controller() {
-
-}
+fn make_event_controller() {}
 
 fn attach_covers(covers: Vec<Image>, grid: &Grid) {
     let (mut row, mut col) = (0, 0);

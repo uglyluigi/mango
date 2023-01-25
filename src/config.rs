@@ -1,7 +1,7 @@
-use config::{builder::DefaultState, Config, ConfigBuilder, File, FileFormat, ConfigError};
+use config::{builder::DefaultState, Config, ConfigBuilder, ConfigError, File, FileFormat};
 
 pub fn build_config() {
-    match  build_builder() {
+    match build_builder() {
         Ok(config) => {
             println!("Config built");
         }
@@ -14,8 +14,8 @@ pub fn build_config() {
 fn build_builder() -> Result<ConfigBuilder<DefaultState>, ConfigError> {
     let builder = Config::builder()
         .set_default("example_key", "big_chungus")?
-		.set_default("library_location", "~/Documents/Manga Library/")?
+        .set_default("library_location", "~/Documents/Manga Library/")?
         .add_source(File::new("config/settings", FileFormat::Toml));
 
-	Ok(builder)
+    Ok(builder)
 }
