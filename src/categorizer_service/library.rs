@@ -1,15 +1,17 @@
 use std::{
     collections::HashMap,
+    ffi::OsStr,
     fmt::Display,
     fs::{DirEntry, ReadDir},
     io::{self, BufRead, BufReader, BufWriter, Write},
     path::{Path, PathBuf},
 };
 
+use derive_builder::Builder;
 use regex::{Captures, Regex};
 use serde::{ser::SerializeStruct, Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Rating {
     OutOfTen(i32),
     OutOfFive(i32),
@@ -17,19 +19,19 @@ pub enum Rating {
     OutOfFiveDecimal(f32),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Status {
     IN_PROGRESS,
     HAITUS,
     COMPLETE,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Tag {
     tag: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Tags {
     tags: Vec<Tag>,
 }
@@ -40,7 +42,7 @@ impl Tags {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Builder)]
 pub struct Series {
     title: String,
     rating: Rating,
@@ -51,7 +53,7 @@ pub struct Series {
     covers: Vec<Cover>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Builder)]
 pub struct Chapter {
     chapter_number: i32,
     image_paths: Vec<PathBuf>,
@@ -122,7 +124,7 @@ impl Series {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Cover {
     pub path: PathBuf,
 }
@@ -136,46 +138,70 @@ impl Cover {
 const CHAPTER_FOLDER_REGEX: &'static str = r"((c|Ch(.*)( |\.))?([0-9]+))(.+)?";
 const COVER_IMAGE_REGEX: &'static str = r"([cC]over)(\.(jpe?g|png))?";
 
-pub fn build_library_2(library_path: PathBuf) -> Library {
+pub fn build_library(library_path: PathBuf) -> Library {
     let mut library = Library::new();
 
-    match get_pathbufs_in(&library_path) {
+    // Get pathbufs of all files inside library_path
+    match get_pathbufs_in(&library_path, Some(pathbuf_filter)) {
         Some(series) => {
+            // Begin building the "Series" struct for this directory
             for buf in series {
-                if deconstruct_buf(&buf, COVER_IMAGE_REGEX).is_some() {
-                    //
-                }
+                let mut series_builder = SeriesBuilder::default();
 
-                match get_pathbufs_in(&buf) {
+                series_builder
+                    .title(buf.file_name().unwrap().to_str().unwrap().to_string())
+                    .rating(Rating::OutOfTen(0))
+                    .status(Status::IN_PROGRESS)
+                    .tags(Tags::new())
+                    .number_of_chapters(0);
+
+                match get_pathbufs_in(&buf, Some(pathbuf_filter)) {
                     Some(chapters) => {
+                        let mut chapters_but_structs = vec![];
+
                         for chapter in chapters {
+                            if deconstruct_buf(&chapter, COVER_IMAGE_REGEX).is_some() {
+                                series_builder.covers(vec![Cover::new(buf.clone())]);
+                                continue;
+                            }
+
+                            let mut chapter_builder = ChapterBuilder::default();
+
                             match deconstruct_buf(&chapter, CHAPTER_FOLDER_REGEX) {
                                 Some(caps) => match caps.get(5) {
-                                    Some(chapter_number) => match get_pathbufs_in(&chapter) {
-                                        Some(chapter_images) => {
-                                            
+                                    Some(chapter_number) => {
+                                        chapter_builder.chapter_number(
+                                            chapter_number.as_str().parse::<i32>().unwrap(),
+                                        );
+                                        match get_pathbufs_in(&chapter, Some(pathbuf_filter)) {
+                                            Some(chapter_images) => {
+                                                chapter_builder.image_paths(chapter_images);
+                                            }
+                                            None => println!(
+                                                "Skipping folder {:?} (does not contain a number)",
+                                                chapter.as_path()
+                                            ),
                                         }
-                                        None => println!(
-                                            "Skipping folder {} (does not contain a number)",
-                                            chapter.file_name().unwrap().to_str().unwrap()
-                                        ),
-                                    },
+                                    }
                                     None => (),
                                 },
                                 None => {
                                     println!(
-                                        "Skipping folder {} (does not appear to be a chapter of a series)",
-                                        chapter.file_name().unwrap().to_str().unwrap()
+                                        "Skipping folder {:?} (does not appear to be a chapter of a series)",
+                                        chapter.as_path()
                                     );
                                 }
                             };
+                            chapters_but_structs.push(chapter_builder.build().unwrap());
                         }
+                        series_builder.chapters(chapters_but_structs);
                     }
-                    None => todo!(),
+                    None => (),
                 }
+                library.add_series(series_builder.build().unwrap());
             }
         }
-        None => todo!(),
+        None => (),
     }
 
     library
@@ -194,138 +220,18 @@ fn deconstruct_buf<'a>(path: &'a PathBuf, regex: &'static str) -> Option<Capture
     }
 }
 
-pub fn build_library() -> Library {
-    let library_dir = Path::new("./MangaLibrary");
-    let mut library = Library::new();
-
-    match library_dir.read_dir() {
-        Ok(read_dir) => {
-            // Filter out non-directories, "dotfiles", and files with names that
-            // cannot be converted from an OsString to a String
-            let read_dir = read_dir.filter(|dir| match dir {
-                Ok(dir) => {
-                    return (match dir.file_name().into_string() {
-                        Ok(name) => !(name.starts_with(".")),
-                        _ => false,
-                    });
-                }
-                _ => false,
-            });
-
-            for read_dir_result in read_dir {
-                match read_dir_result {
-                    Ok(dir_entry) => {
-                        let series_name = dir_entry.file_name().into_string().unwrap();
-
-                        println!("Logging series: {}", series_name);
-                        let mut chapters = Vec::new();
-                        let mut covers = Vec::new();
-
-                        match dir_entry.path().read_dir() {
-                            Ok(chapter_dirs) => {
-                                let chapter_dirs = chapter_dirs.filter(|dir| match dir {
-                                    Ok(dir) => {
-                                        return (match dir.file_name().into_string() {
-                                            Ok(name) => !(name.starts_with(".")),
-                                            _ => false,
-                                        });
-                                    }
-                                    _ => false,
-                                });
-
-                                for chapter_dir in chapter_dirs {
-                                    match chapter_dir {
-                                        Ok(file) => match file.file_name().into_string() {
-                                            Ok(file_name) => {
-                                                // this should probably just panic if my regexes are bad tbh
-                                                let chapter_matcher =
-                                                    Regex::new(CHAPTER_FOLDER_REGEX)
-                                                        .expect("Failed to compile regex");
-
-                                                let cover_matcher = Regex::new(COVER_IMAGE_REGEX)
-                                                    .expect("Failed to compile regex");
-
-                                                let chapter_caps =
-                                                    chapter_matcher.captures(&file_name);
-
-                                                if let Some(caps) = chapter_caps {
-                                                    let chapter_number = caps
-                                                        .get(5)
-                                                        .unwrap()
-                                                        .as_str()
-                                                        .parse::<i32>()
-                                                        .unwrap();
-
-                                                    match file.path().read_dir() {
-                                                        Ok(read) => {
-                                                            for thing in read {
-                                                                println!(
-                                                                    "{}",
-                                                                    thing
-                                                                        .unwrap()
-                                                                        .file_name()
-                                                                        .to_str()
-                                                                        .unwrap()
-                                                                );
-                                                            }
-                                                        }
-                                                        Err(err) => todo!(),
-                                                    }
-
-                                                    let chapter =
-                                                        Chapter::new(chapter_number, Vec::new());
-
-                                                    chapters.push(chapter);
-                                                }
-
-                                                let cover_caps = cover_matcher.captures(&file_name);
-
-                                                if let Some(caps) = cover_caps {
-                                                    covers.push(Cover::new(file.path()));
-                                                }
-                                            }
-                                            Err(e) => println!("Err reading dir name: {:?}", e),
-                                        },
-                                        _ => (),
-                                    }
-                                }
-                            }
-                            Err(_) => todo!(),
-                        }
-
-                        library.add_series(Series::new(
-                            series_name,
-                            Rating::OutOfTen(0),
-                            0,
-                            Status::IN_PROGRESS,
-                            Tags::new(),
-                            chapters,
-                            covers,
-                        ));
-                    }
-                    Err(e) => println!("{:?}", e),
-                }
-            }
-        }
-        Err(e) => println!("{:?}", e),
-    }
-    library
-}
-
 // Returns a pathbuf representing each file inside of the provided path
-fn get_pathbufs_in(path: &PathBuf) -> Option<Vec<PathBuf>> {
+fn get_pathbufs_in<F>(path: &PathBuf, filter: Option<F>) -> Option<Vec<PathBuf>>
+where
+    F: FnOnce(&Result<DirEntry, std::io::Error>) -> bool + Copy,
+{
     let mut ret = Vec::new();
 
     match path.read_dir() {
         Ok(read) => {
-            read.filter(|dir| match dir {
-                Ok(dir) => {
-                    return match dir.file_name().into_string() {
-                        Ok(name) => !name.starts_with("."),
-                        _ => false,
-                    };
-                }
-                _ => false,
+            read.filter(|dir| match filter {
+                Some(f) => f(dir),
+                None => true,
             })
             .for_each(|x| match x {
                 Ok(x) => ret.push(x.path()),
@@ -338,6 +244,18 @@ fn get_pathbufs_in(path: &PathBuf) -> Option<Vec<PathBuf>> {
             eprintln!("Error reading dir {:?}", e);
             None
         }
+    }
+}
+
+fn pathbuf_filter(entry: &Result<DirEntry, std::io::Error>) -> bool {
+    match entry {
+        Ok(dir) => {
+            return match dir.file_name().into_string() {
+                Ok(name) => !name.starts_with("."),
+                _ => false,
+            };
+        }
+        _ => false,
     }
 }
 
