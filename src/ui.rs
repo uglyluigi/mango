@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use gtk::builders::{BoxBuilder, GridBuilder, ImageBuilder, PictureBuilder};
-use gtk::ffi::{GtkImage, GtkPicture, GtkWidget};
+use gtk::ffi::{GtkGrid, GtkImage, GtkPicture, GtkWidget};
 use gtk::gdk::{Display, Texture};
 use gtk::gdk_pixbuf::Pixbuf;
 use gtk::{prelude::GLAreaExt, Application, ApplicationWindow};
@@ -29,10 +29,11 @@ fn quit(app: &Application) {}
 
 fn build_ui(app: &Application) {
     let library_grid = GridBuilder::new().build();
-
-    if let Ok(library) = categorizer_service::library::deserialize_from_disk() {
-        attach_covers(make_covers(&library), &library_grid);
-    }
+    
+    attach_covers(
+        make_covers(&categorizer_service::library::LIBRARY, &library_grid),
+        &library_grid,
+    );
 
     let window = ApplicationWindow::builder()
         .application(app)
@@ -45,7 +46,7 @@ fn build_ui(app: &Application) {
     window.present();
 }
 
-fn make_covers(library: &Library) -> Vec<Picture> {
+fn make_covers(library: &Library, grid: &Grid) -> Vec<Picture> {
     let mut ret = Vec::new();
 
     for series in library.series() {
@@ -56,15 +57,15 @@ fn make_covers(library: &Library) -> Vec<Picture> {
             .file(&gtk::gio::File::for_path(&first_cover.path))
             .build();
 
-        let gtk_box = BoxBuilder::new().build();
-        gtk_box.append(&img);
+        let series_name = series.title.clone();
 
         let gesture = gtk::GestureClick::new();
         gesture.set_button(gtk::gdk::ffi::GDK_BUTTON_PRIMARY as u32);
 
-        gesture.connect_pressed(|gesture, num_consecutive_clicks, x, y| {
+        gesture.connect_pressed(move |gesture, _, _, _| {
+            let series_name_ = &series_name;
             gesture.set_state(gtk::EventSequenceState::Claimed);
-            println!("{} {} {}", num_consecutive_clicks, x, y);
+            println!("button series = {}", series_name_);
         });
 
         img.add_controller(&gesture);

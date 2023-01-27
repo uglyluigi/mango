@@ -1,13 +1,11 @@
 use std::{
     io::{self, BufWriter, Write},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 use derive_getters::Getters;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
-
-use crate::categorizer_service::library::Library;
 
 #[derive(Serialize, Deserialize)]
 pub enum Theme {
@@ -21,11 +19,23 @@ impl Default for Theme {
     }
 }
 
-#[derive(Serialize, Deserialize, Getters, Default)]
+#[derive(Serialize, Deserialize, Getters)]
 pub struct Config {
     theme: Theme,
     max_columns: usize,
     max_rows: usize,
+    library_path: PathBuf,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            theme: Default::default(),
+            max_columns: 5,
+            max_rows: 100,
+            library_path: "./MangaLibrary".into(),
+        }
+    }
 }
 
 lazy_static! {

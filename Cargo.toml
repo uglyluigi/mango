@@ -2,6 +2,8 @@
 name = "mango"
 version = "0.1.0"
 edition = "2021"
+description = "Manga Reader"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,3 +17,14 @@ regex = "1.7.1"
 reqwest = "0.11.13"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.91"
+
+[package.metadata.bundle]
+name = "Mango"
+identifier = "uglyluigi.Mango"
+icons = [
+	"resources/icons/mango.png",
+	"resources/icons/mango256x256.png",
+	"resources/icons/mango512x512.png",
+	"resources/icons/mango@2x.png",
+]
+

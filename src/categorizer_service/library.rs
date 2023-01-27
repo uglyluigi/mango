@@ -8,8 +8,15 @@ use std::{
 };
 
 use derive_builder::Builder;
+use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use serde::{ser::SerializeStruct, Deserialize, Serialize};
+
+use crate::config;
+
+lazy_static! {
+    pub static ref LIBRARY: Library = init_library();
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum Rating {
@@ -44,13 +51,13 @@ impl Tags {
 
 #[derive(Serialize, Deserialize, Builder)]
 pub struct Series {
-    title: String,
-    rating: Rating,
-    number_of_chapters: i32,
-    status: Status,
-    tags: Tags,
-    chapters: Vec<Chapter>,
-    covers: Vec<Cover>,
+    pub title: String,
+    pub rating: Rating,
+    pub number_of_chapters: i32,
+    pub status: Status,
+    pub tags: Tags,
+    pub chapters: Vec<Chapter>,
+    pub covers: Vec<Cover>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Builder)]
@@ -138,7 +145,7 @@ impl Cover {
 const CHAPTER_FOLDER_REGEX: &'static str = r"((c|Ch(.*)( |\.))?([0-9]+))(.+)?";
 const COVER_IMAGE_REGEX: &'static str = r"([cC]over)(\.(jpe?g|png))?";
 
-pub fn build_library(library_path: PathBuf) -> Library {
+pub fn build_library(library_path: &PathBuf) -> Library {
     let mut library = Library::new();
 
     // Get pathbufs of all files inside library_path
@@ -261,13 +268,24 @@ fn pathbuf_filter(entry: &Result<DirEntry, std::io::Error>) -> bool {
 
 const LIBRARY_FILE_NAME: &'static str = "library.json";
 
-pub fn serialize_to_disk(library: Library) -> io::Result<()> {
+fn serialize_to_disk(library: &Library) -> io::Result<()> {
     let f = std::fs::File::create(LIBRARY_FILE_NAME)?;
     let mut f = BufWriter::new(f);
 
     match serde_json::to_string(&library) {
         Ok(library_json) => f.write_all(library_json.as_bytes()),
         Err(e) => Err(io::Error::from(e)),
+    }
+}
+
+pub fn serialize_library(library: &Library) {
+    match serialize_to_disk(&library) {
+        Ok(_) => {
+            println!("Successfully wrote library to disk");
+        }
+        Err(e) => {
+            eprintln!("{:?}", e);
+        }
     }
 }
 
@@ -281,4 +299,21 @@ pub fn deserialize_from_disk() -> io::Result<Library> {
     .expect("Failed to deserialize library struct from library file");
 
     Ok(library)
+}
+
+pub fn init_library() -> Library {
+    match deserialize_from_disk() {
+        Ok(lib) => lib,
+        Err(e) => {
+            match e.kind() {
+                io::ErrorKind::NotFound => {
+                    println!("Initializing new library");
+                    let default_library = build_library(config::MANGO_CONFIG.library_path());
+                    serialize_library(&default_library);
+                    default_library
+                }
+                _ => panic!("Failed to load library: {:?}", e),
+            }
+        }
+    }
 }
