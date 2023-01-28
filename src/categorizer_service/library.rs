@@ -1,16 +1,14 @@
 use std::{
-    collections::HashMap,
-    ffi::OsStr,
     fmt::Display,
-    fs::{DirEntry, ReadDir},
-    io::{self, BufRead, BufReader, BufWriter, Write},
-    path::{Path, PathBuf},
+    fs::{DirEntry},
+    io::{self, BufWriter, Write},
+    path::{PathBuf},
 };
 
 use derive_builder::Builder;
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
-use serde::{ser::SerializeStruct, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use crate::config;
 
