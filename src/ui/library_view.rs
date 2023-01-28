@@ -1,7 +1,10 @@
 use gtk::{
-    builders::{GridBuilder, PictureBuilder},
-    prelude::GestureExt,
-    traits::{GestureSingleExt, GridExt, WidgetExt}, Grid, Picture,
+    builders::{BoxBuilder, GridBuilder, LabelBuilder, PictureBuilder},
+    ffi::GtkBox,
+    gdk::Display,
+    prelude::{GestureExt, IsA},
+    traits::{BoxExt, GestureSingleExt, GridExt, OrientableExt, StyleContextExt, WidgetExt},
+    CssProvider, Grid, Orientation, Picture, StyleContext, Widget,
 };
 
 use crate::{
@@ -9,24 +12,30 @@ use crate::{
     config::MANGO_CONFIG,
 };
 
+use super::chapter_view::open_chapter_view;
+
 pub fn get_library_view() -> Grid {
-    let library_grid = GridBuilder::new().build();
-    attach_covers(make_covers(&LIBRARY), &library_grid);
-	library_grid
+    let library_grid = GridBuilder::new().column_homogeneous(true).build();
+    attach_covers(make_covers_with_boxes(&LIBRARY), &library_grid);
+    library_grid
 }
 
-fn make_covers(library: &Library) -> Vec<Picture> {
+fn make_covers_with_boxes(library: &Library) -> Vec<gtk::Box> {
     let mut ret = Vec::new();
 
     for series in library.series() {
         // todo multiple cover support
         let first_cover = &series.covers()[0];
         let img = PictureBuilder::new()
-            .css_classes(vec![String::from("cover")])
+            .css_classes(vec![String::from("library_view")])
             .file(&gtk::gio::File::for_path(&first_cover.path))
             .build();
 
         let series_name = series.title.clone();
+        let label = LabelBuilder::new()
+            .css_classes(vec![String::from("library_view")])
+            .label(&series_name.as_str())
+            .build();
 
         let gesture = gtk::GestureClick::new();
         gesture.set_button(gtk::gdk::ffi::GDK_BUTTON_PRIMARY as u32);
@@ -34,17 +43,28 @@ fn make_covers(library: &Library) -> Vec<Picture> {
         gesture.connect_pressed(move |gesture, _, _, _| {
             let series_name_ = &series_name;
             gesture.set_state(gtk::EventSequenceState::Claimed);
-            println!("button series = {}", series_name_);
+            open_chapter_view(&series_name_);
         });
 
         img.add_controller(&gesture);
-        ret.push(img);
+
+        let img_box = BoxBuilder::new()
+            .css_classes(vec![String::from("library_view")])
+            .orientation(Orientation::Vertical)
+            .build();
+        img_box.append(&img);
+        img_box.append(&label);
+
+        ret.push(img_box);
     }
 
     ret
 }
 
-fn attach_covers(covers: Vec<Picture>, grid: &Grid) {
+fn attach_covers<T>(covers: Vec<T>, grid: &Grid)
+where
+    T: IsA<Widget>,
+{
     let (mut row, mut col) = (0, 0);
 
     const WIDTH: i32 = 1;

@@ -4,6 +4,7 @@ use gtk::{Application, ApplicationWindow};
 
 mod config_ui;
 mod library_view;
+mod chapter_view;
 
 const APP_ID: &str = "uglyluigi.Mango";
 const DEFAULT_WIDTH: i32 = 1000;
@@ -30,12 +31,11 @@ fn build_ui(app: &Application) {
         .build();
 
     window.present();
-    config_ui::display_config_window(app);
 }
 
 fn load_css() {
     let provider = CssProvider::new();
-    provider.load_from_data(include_bytes!("styles/library_view.css"));
+    provider.load_from_data(include_bytes!("styles/root.css"));
 
     StyleContext::add_provider_for_display(
         &Display::default().expect("Could not connect to display"),

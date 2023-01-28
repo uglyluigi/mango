@@ -26,9 +26,9 @@ pub enum Rating {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum Status {
-    IN_PROGRESS,
-    HAITUS,
-    COMPLETE,
+    InProgress,
+    Haitus,
+    Complete,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -156,7 +156,7 @@ pub fn build_library(library_path: &PathBuf) -> Library {
                 series_builder
                     .title(buf.file_name().unwrap().to_str().unwrap().to_string())
                     .rating(Rating::OutOfTen(0))
-                    .status(Status::IN_PROGRESS)
+                    .status(Status::InProgress)
                     .tags(Tags::new())
                     .number_of_chapters(0);
 
