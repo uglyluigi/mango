@@ -1,8 +1,9 @@
 use std::{
+    collections::binary_heap::Iter,
     fmt::Display,
-    fs::{DirEntry},
+    fs::DirEntry,
     io::{self, BufWriter, Write},
-    path::{PathBuf},
+    path::PathBuf,
 };
 
 use derive_builder::Builder;
@@ -16,7 +17,7 @@ lazy_static! {
     pub static ref LIBRARY: Library = init_library();
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub enum Rating {
     OutOfTen(i32),
     OutOfFive(i32),
@@ -24,7 +25,7 @@ pub enum Rating {
     OutOfFiveDecimal(f32),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub enum Status {
     InProgress,
     Haitus,
@@ -47,7 +48,7 @@ impl Tags {
     }
 }
 
-#[derive(Serialize, Deserialize, Builder)]
+#[derive(Serialize, Deserialize, Builder, Clone)]
 pub struct Series {
     pub title: String,
     pub rating: Rating,
@@ -60,8 +61,8 @@ pub struct Series {
 
 #[derive(Serialize, Deserialize, Clone, Builder)]
 pub struct Chapter {
-    chapter_number: i32,
-    image_paths: Vec<PathBuf>,
+    pub chapter_number: i32,
+    pub image_paths: Vec<PathBuf>,
 }
 
 impl Chapter {
@@ -75,7 +76,7 @@ impl Chapter {
 
 #[derive(Serialize, Deserialize)]
 pub struct Library {
-    series: Vec<Series>,
+    pub series: Vec<Series>,
 }
 
 impl Display for Library {
@@ -94,8 +95,12 @@ impl Library {
         self.series.push(series);
     }
 
-    pub fn series(&self) -> &Vec<Series> {
-        &self.series
+    pub fn series_owned(&self) -> Vec<Box<Series>> {
+        self.series
+            .clone()
+            .into_iter()
+            .map(|x| Box::new(x))
+            .collect::<Vec<Box<Series>>>()
     }
 }
 
@@ -118,14 +123,6 @@ impl Series {
             chapters,
             covers,
         }
-    }
-
-    pub fn chapters(&self) -> &Vec<Chapter> {
-        &self.chapters
-    }
-
-    pub fn covers(&self) -> &Vec<Cover> {
-        &self.covers
     }
 }
 
@@ -299,19 +296,17 @@ pub fn deserialize_from_disk() -> io::Result<Library> {
     Ok(library)
 }
 
-pub fn init_library() -> Library {
+fn init_library() -> Library {
     match deserialize_from_disk() {
         Ok(lib) => lib,
-        Err(e) => {
-            match e.kind() {
-                io::ErrorKind::NotFound => {
-                    println!("Initializing new library");
-                    let default_library = build_library(config::MANGO_CONFIG.library_path());
-                    serialize_library(&default_library);
-                    default_library
-                }
-                _ => panic!("Failed to load library: {:?}", e),
+        Err(e) => match e.kind() {
+            io::ErrorKind::NotFound => {
+                println!("Initializing new library");
+                let default_library = build_library(config::MANGO_CONFIG.library_path());
+                serialize_library(&default_library);
+                default_library
             }
-        }
+            _ => panic!("Failed to load library: {:?}", e),
+        },
     }
 }

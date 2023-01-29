@@ -1,10 +1,8 @@
 use gtk::{
     builders::{BoxBuilder, GridBuilder, LabelBuilder, PictureBuilder},
-    ffi::GtkBox,
-    gdk::Display,
     prelude::{GestureExt, IsA},
     traits::{BoxExt, GestureSingleExt, GridExt, OrientableExt, StyleContextExt, WidgetExt},
-    CssProvider, Grid, Orientation, Picture, StyleContext, Widget,
+    Grid, Orientation, Widget,
 };
 
 use crate::{
@@ -23,9 +21,11 @@ pub fn get_library_view() -> Grid {
 fn make_covers_with_boxes(library: &Library) -> Vec<gtk::Box> {
     let mut ret = Vec::new();
 
-    for series in library.series() {
+	// Need to clone the series Vec because I need ownership of
+	// the Series struct in order to move it to the gesture 
+    for series in library.series.clone() {
         // todo multiple cover support
-        let first_cover = &series.covers()[0];
+        let first_cover = &series.covers[0];
         let img = PictureBuilder::new()
             .css_classes(vec![String::from("library_view")])
             .file(&gtk::gio::File::for_path(&first_cover.path))
@@ -41,9 +41,12 @@ fn make_covers_with_boxes(library: &Library) -> Vec<gtk::Box> {
         gesture.set_button(gtk::gdk::ffi::GDK_BUTTON_PRIMARY as u32);
 
         gesture.connect_pressed(move |gesture, _, _, _| {
-            let series_name_ = &series_name;
+			// FIXME still have to clone here cuz this closure is Fn and
+			// won't move the series from the for loop in here for some darn!!!
+			// reason
+            let series_ = series.clone();
             gesture.set_state(gtk::EventSequenceState::Claimed);
-            open_chapter_view(&series_name_);
+            open_chapter_view(series_);
         });
 
         img.add_controller(&gesture);
