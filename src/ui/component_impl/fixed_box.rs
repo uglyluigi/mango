@@ -20,8 +20,8 @@ impl ObjectSubclass for FixedDimBoxImpl {
 
     fn new() -> Self {
         Self {
-            max_width: Some(0).into(),
-            max_height: Some(0).into(),
+            max_width: None.into(),
+            max_height: None.into(),
         }
     }
 }
