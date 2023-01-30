@@ -1,26 +1,85 @@
-#[derive(Default)]
-pub struct FixedDimBoxImpl {
-    max_width: Option<i32>,
-    max_height: Option<i32>,
-}
+use std::cell::Cell;
 
 use glib::Object;
 use gtk::glib::object::ObjectBuilder;
-use gtk::prelude::IsA;
+use gtk::glib::{once_cell, ParamSpec, Value};
 use gtk::subclass::prelude::*;
-use gtk::traits::BoxExt;
-use gtk::{glib, Widget};
+use gtk::{glib};
+
+#[derive(Default)]
+pub struct FixedDimBoxImpl {
+    max_width: Cell<Option<i32>>,
+    max_height: Cell<Option<i32>>,
+}
 
 #[gtk::glib::object_subclass]
 impl ObjectSubclass for FixedDimBoxImpl {
     const NAME: &'static str = "FixedDimBoxImpl";
     type Type = FixedDimBox;
     type ParentType = gtk::Box;
+
+    fn new() -> Self {
+        Self {
+            max_width: Some(0).into(),
+            max_height: Some(0).into(),
+        }
+    }
 }
 
 impl ObjectImpl for FixedDimBoxImpl {
     fn constructed(&self) {
         self.parent_constructed();
+    }
+
+    fn set_property(&self, _id: usize, _value: &Value, _pspec: &ParamSpec) {
+        match _pspec.name() {
+            "max-width" => {
+                let input_number = _value.get().expect("Property max-width must be type i32.");
+                self.max_width.replace(if input_number > 0 {
+                    Some(input_number)
+                } else {
+                    None
+                });
+            }
+            "max-height" => {
+                let input_number = _value.get().expect("Property max-height must be type i32.");
+                self.max_height.replace(if input_number > 0 {
+                    Some(input_number)
+                } else {
+                    None
+                });
+            }
+            _ => unimplemented!(),
+        }
+    }
+
+    fn properties() -> &'static [glib::ParamSpec] {
+        use once_cell::sync::Lazy;
+
+        static PROPERTIES: Lazy<Vec<glib::ParamSpec>> = Lazy::new(|| {
+            vec![
+                glib::ParamSpecInt::new(
+                    "max-width",
+                    "Max-width",
+                    "The max width the FixedDimBox should request",
+                    0,
+                    i32::MAX,
+                    0,
+                    glib::ParamFlags::READWRITE,
+                ),
+                glib::ParamSpecInt::new(
+                    "max-height",
+                    "Max-height",
+                    "The max height the FixedDimBox should request",
+                    0,
+                    i32::MAX,
+                    0,
+                    glib::ParamFlags::READWRITE,
+                ),
+            ]
+        });
+
+        PROPERTIES.as_ref()
     }
 }
 
@@ -30,8 +89,8 @@ impl LayoutManagerImpl for FixedDimBoxImpl {
     fn allocate(&self, widget: &gtk::Widget, width: i32, height: i32, baseline: i32) {
         self.parent_allocate(
             widget,
-            self.max_width.unwrap_or(width),
-            self.max_height.unwrap_or(height),
+            self.max_width.get().unwrap_or(width),
+            self.max_height.get().unwrap_or(height),
             baseline,
         );
     }
@@ -48,8 +107,12 @@ glib::wrapper! {
 type Builder<'a> = ObjectBuilder<'a, FixedDimBox>;
 
 impl FixedDimBox {
-    pub fn new() -> Self {
-        Object::builder().build()
+    pub fn new(max_width: i32, max_height: i32) -> Self {
+        glib::Object::new(&[("max-width", &max_width), ("max-height", &max_height)])
+    }
+
+    pub fn fixed_width(width: i32) -> Self {
+        Self::new(width, 0)
     }
 
     pub fn builder<'a>() -> Builder<'a> {

@@ -1,23 +1,19 @@
 use gtk::{
     builders::{
-        BoxBuilder, LabelBuilder, NotebookBuilder, PictureBuilder, StackBuilder,
-        StackSidebarBuilder, StackSwitcherBuilder,
+        LabelBuilder, NotebookBuilder, PictureBuilder, StackBuilder,
+        StackSidebarBuilder,
     },
-    glib::translate::FromGlibPtrNone,
     subclass::{
-        prelude::{BoxImpl, LayoutManagerImpl, ObjectImpl, ObjectSubclass},
-        root::RootImpl,
-        widget::WidgetImpl,
+        prelude::{ObjectSubclass},
     },
-    traits::{BoxExt, GtkWindowExt, SelectionModelExt},
-    ApplicationWindow, Notebook, Orientation, PositionType, StackSidebar, StackSwitcher,
+    traits::{BoxExt, GtkWindowExt},
+    ApplicationWindow, Notebook, PositionType, StackSidebar,
 };
 
 use crate::categorizer_service::library::Series;
 
 use super::component_impl::{
-    self,
-    fixed_box::{FixedDimBox, FixedDimBoxImpl},
+    fixed_box::{FixedDimBox},
 };
 
 pub fn open_chapter_view(series: Series) {
@@ -52,11 +48,12 @@ fn chapter_selector(series: &Series) -> StackSidebar {
 
 fn get_panes(series: &Series) -> gtk::Paned {
     let switcher = chapter_selector(series);
-    let max_width_box = component_impl::fixed_box::FixedDimBox::new();
+    let max_width_box = FixedDimBox::fixed_width(30);
     max_width_box.append(&switcher);
 
     gtk::Paned::builder()
         .start_child(&max_width_box)
+
         .end_child(&switcher.stack().unwrap())
         .build()
 }

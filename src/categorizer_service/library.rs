@@ -1,6 +1,4 @@
 use std::{
-    cmp::Ordering,
-    collections::binary_heap::Iter,
     fmt::Display,
     fs::DirEntry,
     io::{self, BufWriter, Write},
