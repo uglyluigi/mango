@@ -1,4 +1,5 @@
 use std::{
+    cmp::Ordering,
     collections::binary_heap::Iter,
     fmt::Display,
     fs::DirEntry,
@@ -57,6 +58,18 @@ pub struct Series {
     pub tags: Tags,
     pub chapters: Vec<Chapter>,
     pub covers: Vec<Cover>,
+}
+
+impl Series {
+    pub fn chapter(&self, chapter_num: i32) -> Option<&Chapter> {
+        for chapter in &self.chapters {
+            if chapter.chapter_number == chapter_num {
+                return Some(&chapter)
+            }
+        }
+
+        None
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Builder)]

@@ -3,11 +3,22 @@ use gtk::{
         BoxBuilder, LabelBuilder, NotebookBuilder, PictureBuilder, StackBuilder,
         StackSidebarBuilder, StackSwitcherBuilder,
     },
-    traits::{BoxExt, GtkWindowExt},
+    glib::translate::FromGlibPtrNone,
+    subclass::{
+        prelude::{BoxImpl, LayoutManagerImpl, ObjectImpl, ObjectSubclass},
+        root::RootImpl,
+        widget::WidgetImpl,
+    },
+    traits::{BoxExt, GtkWindowExt, SelectionModelExt},
     ApplicationWindow, Notebook, Orientation, PositionType, StackSidebar, StackSwitcher,
 };
 
 use crate::categorizer_service::library::Series;
+
+use super::component_impl::{
+    self,
+    fixed_box::{FixedDimBox, FixedDimBoxImpl},
+};
 
 pub fn open_chapter_view(series: Series) {
     let window = ApplicationWindow::builder()
@@ -20,36 +31,45 @@ pub fn open_chapter_view(series: Series) {
     window.present();
 }
 
-fn chapter_selector(series: &Series) -> StackSwitcher {
+fn chapter_selector(series: &Series) -> StackSidebar {
     let stack = StackBuilder::new().build();
 
-    for chapter in &series.chapters {
-        let chapter_num = chapter.chapter_number as usize;
+    for chapter in series.chapters.iter().rev() {
+        let chapter_num = chapter.chapter_number;
+
         stack.add_titled(
-            &generate_notebook(series, chapter_num - 1),
+            &generate_notebook(series, chapter_num),
             Option::<&str>::None,
             &format!("Chapter {}", chapter_num),
         );
     }
 
-    StackSwitcherBuilder::new().stack(&stack).build()
-}
-
-fn get_panes(series: &Series) -> gtk::Paned {
-    gtk::Paned::builder()
-        .start_child(&chapter_selector(series))
-        .end_child(&generate_notebook(series, 0))
+    StackSidebarBuilder::new()
+        .css_classes(vec![String::from("chapter_view")])
+        .stack(&stack)
         .build()
 }
 
-fn generate_notebook(series: &Series, chapter: usize) -> Notebook {
+fn get_panes(series: &Series) -> gtk::Paned {
+    let switcher = chapter_selector(series);
+    let max_width_box = component_impl::fixed_box::FixedDimBox::new();
+    max_width_box.append(&switcher);
+
+    gtk::Paned::builder()
+        .start_child(&max_width_box)
+        .end_child(&switcher.stack().unwrap())
+        .build()
+}
+
+fn generate_notebook(series: &Series, chapter: i32) -> Notebook {
     let notebook = NotebookBuilder::new()
         .tab_pos(PositionType::Bottom)
         .scrollable(true)
         .build();
 
     let mut page_no = 1;
-    let chapter = &series.chapters[chapter];
+
+    let chapter = series.chapter(chapter).expect("Couldn\'t find chapter!!!");
 
     for image_path in &chapter.image_paths {
         notebook.append_page(

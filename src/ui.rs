@@ -5,6 +5,7 @@ use gtk::{Application, ApplicationWindow};
 mod config_ui;
 mod library_view;
 mod chapter_view;
+mod component_impl;
 
 const APP_ID: &str = "uglyluigi.Mango";
 const DEFAULT_WIDTH: i32 = 1000;
