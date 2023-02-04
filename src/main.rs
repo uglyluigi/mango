@@ -1,7 +1,9 @@
-pub mod categorizer_service;
-pub mod config;
-pub mod ui;
+mod ui;
+mod categorizer_service;
+mod config;
+
+use ui::app::App;
 
 fn main() {
-    ui::show();
+    yew::Renderer::<App>::new().render();
 }
