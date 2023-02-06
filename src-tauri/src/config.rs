@@ -25,6 +25,7 @@ pub struct Config {
     max_columns: usize,
     max_rows: usize,
     library_path: PathBuf,
+    resource_server_port: usize,
 }
 
 impl Default for Config {
@@ -34,6 +35,7 @@ impl Default for Config {
             max_columns: 5,
             max_rows: 100,
             library_path: "./MangaLibrary".into(),
+            resource_server_port: 1420,
         }
     }
 }
