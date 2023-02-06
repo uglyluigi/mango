@@ -7,6 +7,10 @@ use derive_getters::Getters;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
+lazy_static! {
+    pub static ref MANGO_CONFIG: Config = init_config();
+}
+
 #[derive(Serialize, Deserialize)]
 pub enum Theme {
     Dark,
@@ -25,7 +29,14 @@ pub struct Config {
     max_columns: usize,
     max_rows: usize,
     library_path: PathBuf,
-    resource_server_port: usize,
+    resource_server_port: u16,
+    resource_server_domain: String,
+}
+
+impl Config {
+    pub fn resource_server_url(&self) -> String {
+        format!("http://{}:{}/", self.resource_server_domain, self.resource_server_port)
+    }
 }
 
 impl Default for Config {
@@ -36,13 +47,11 @@ impl Default for Config {
             max_rows: 100,
             library_path: "./MangaLibrary".into(),
             resource_server_port: 1420,
+            resource_server_domain: String::from("localhost"),
         }
     }
 }
 
-lazy_static! {
-    pub static ref MANGO_CONFIG: Config = init_config();
-}
 
 const CONFIG_FILE_NAME: &'static str = "config.json";
 

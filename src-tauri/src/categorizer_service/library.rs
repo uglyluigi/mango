@@ -113,6 +113,18 @@ impl Library {
             .map(|x| Box::new(x))
             .collect::<Vec<Box<Series>>>()
     }
+
+    pub fn series_by_name(&self, name: String) -> Option<&Series> {
+        //FIXME may want to use a hash table for series storage instead
+        
+        for serie in &self.series {
+            if serie.title == name {
+                return Some(serie);
+            }
+        }
+
+        None
+    }
 }
 
 impl Series {
