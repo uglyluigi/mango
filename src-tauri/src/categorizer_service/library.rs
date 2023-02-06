@@ -85,7 +85,7 @@ impl Chapter {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Library {
     pub series: Vec<Series>,
 }
