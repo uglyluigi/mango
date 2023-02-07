@@ -13,16 +13,8 @@ use crate::categorizer_service::library::LIBRARY;
 
 mod categorizer_service;
 mod config;
-
-#[tauri::command]
-fn get_library() -> Library {
-    (*categorizer_service::library::LIBRARY).clone()
-}
-
-#[tauri::command]
-fn get_resource_server_url() -> String {
-    MANGO_CONFIG.resource_server_url()
-}
+mod commands;
+use commands::*;
 
 fn main() {
     // channel used to shut down warp server
