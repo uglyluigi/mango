@@ -9,4 +9,8 @@ async function get_resource_server_url() {
   return await invoke("get_resource_server_url", {});
 }
 
-export { get_library, get_resource_server_url };
+async function get_chapter_list(series) {
+  return await invoke("get_chapter_list", { series });
+}
+
+export { get_library, get_resource_server_url, get_chapter_list };

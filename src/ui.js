@@ -1,4 +1,8 @@
-import { get_resource_server_url, get_library } from "./invokes.js";
+import {
+  get_resource_server_url,
+  get_library,
+  get_chapter_list,
+} from "./invokes.js";
 import {
   performStateTransition,
   chapterListState,
@@ -55,8 +59,8 @@ async function requestCoverForSeries(seriesTitle, cb) {
 // Accepting covers from the back-end and
 // creating their img elements on the UI
 async function buildLibraryView() {
-  console.log("library view");
-
+  // FIXME this is expensive...
+  // just write a separate command for getting cover bytes
   let library = await get_library();
 
   for (let series of library.series) {
@@ -85,11 +89,31 @@ async function buildLibraryView() {
       coverContainer.appendChild(imgEl);
       coverContainer.appendChild(coverTitle);
       coverContainer.addEventListener("click", async () => {
-        await performStateTransition(chapterListState);
+        await performStateTransition(chapterListState, {
+          title: series.title,
+          imgSrc: imgEl.src,
+        });
       });
       libraryContainerEl.appendChild(coverContainer);
     });
   }
 }
 
-export { updateElementHiddenAttributes, buildLibraryView };
+async function openChapterList({ title, imgSrc }) {
+  let chapters = await get_chapter_list(title);
+  const actualChapterListEl = document.getElementById("chapter-list");
+  const bigCoverEl = document.getElementById("big-cover");
+
+  for (let chapter of chapters) {
+    let chapterEl = document.createElement("div");
+    chapterEl.classList.add("chapter-list-entry");
+    chapterEl.textContent = chapter;
+    actualChapterListEl.appendChild(chapterEl);
+    bigCoverEl.src = imgSrc;
+    // Looks great!
+    bigCoverEl.width = 500;
+    bigCoverEl.height = 500;
+  }
+}
+
+export { updateElementHiddenAttributes, buildLibraryView, openChapterList };

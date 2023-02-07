@@ -40,6 +40,11 @@ body {
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
 }
 
+#chapter-list-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
 .nav {
   background-color: #498467;
   height: fit-content;

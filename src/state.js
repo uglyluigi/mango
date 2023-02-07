@@ -1,4 +1,8 @@
-import { updateElementHiddenAttributes, buildLibraryView } from "./ui.js";
+import {
+  updateElementHiddenAttributes,
+  buildLibraryView,
+  openChapterList,
+} from "./ui.js";
 
 const libraryViewState = Symbol("libraryView");
 const chapterListState = Symbol("chapterList");
@@ -39,7 +43,7 @@ function registerOneshotHook(f, from, to) {
 
 // Based on current state values, produce
 // the desired UI
-async function render() {
+async function render(args) {
   let state = currentState();
 
   switch (state.currentStateSymbol) {
@@ -50,13 +54,16 @@ async function render() {
       }
       break;
     case chapterListState:
+      await openChapterList(args);
       break;
     case chapterViewState:
       break;
   }
 }
 
-async function performStateTransition(newStateSymbol) {
+// For chapterListState, args look like this:
+// { title: String, imgSrc: String }
+async function performStateTransition(newStateSymbol, args) {
   if (newStateSymbol !== currentStateValue.currentStateSymbol) {
     const stateTransition = {
       from: currentStateValue.currentStateSymbol,
@@ -82,7 +89,7 @@ async function performStateTransition(newStateSymbol) {
     currentStateValue.currentStateSymbol = newStateSymbol;
 
     // Hide stuff that shouldn't be showing; unhide the other stuff!
-    await render();
+    await render(args);
   } else {
     console.log(
       `Erroneous state transition occurred (current state is ${currentState})`
@@ -93,10 +100,6 @@ async function performStateTransition(newStateSymbol) {
 async function invalidateLibraryView() {
   currentStateValue.libraryViewValid = false;
   await render();
-}
-
-async function openChapterView(series, chapter) {
-	
 }
 
 export {
