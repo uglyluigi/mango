@@ -5,7 +5,10 @@
     <link rel="stylesheet" href="style.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tauri App</title>
+    <script type="module" src="/invokes.js" defer></script>
     <script type="module" src="/main.js" defer></script>
+    <script type="module" src="/state.js" defer></script>
+
     <style>
       .logo.vanilla:hover {
         filter: drop-shadow(0 0 2em #ffe21c);
@@ -20,5 +23,7 @@
     </div>
 
     <div id="library-container"></div>
+    <div id="chapter-list-container"></div>
+    <div id="chapter-view-container"></div>
   </body>
 </html>

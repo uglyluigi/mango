@@ -89,3 +89,7 @@ body {
 .cover-title > h2 {
   text-align: center;
 }
+
+.hidden {
+  display: none !important;
+}
