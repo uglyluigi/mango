@@ -42,13 +42,13 @@ body {
 
 #chapter-list-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;  
+  grid-template-columns: 1fr 1fr;
 }
 
 #chapter-list {
   display: flex;
   flex-direction: column;
-  align-items: center;  
+  align-items: center;
 }
 
 #chapter-list-close-button {
@@ -114,7 +114,7 @@ body {
 .cover-container:hover {
 }
 
-.cover-title > h2 {
+.cover-title {
   text-align: center;
 }
 

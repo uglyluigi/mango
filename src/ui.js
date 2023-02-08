@@ -70,7 +70,7 @@ async function buildLibraryView() {
     coverContainer.classList.add("shrink-on-hover");
 
     // Title element
-    let coverTitle = document.createElement("h3");
+    let coverTitle = document.createElement("span");
     coverTitle.classList = "cover-title";
     coverTitle.textContent = series.title;
 
@@ -118,9 +118,9 @@ async function openChapterList({ title, imgSrc }) {
   });
 
   const actualChapterListEl = document.createElement("div");
-  actualChapterListEl.classList.add("chapter-list");
+  actualChapterListEl.id = "chapter-list";
   const bigCoverEl = document.createElement("img");
-  bigCoverEl.classList.add("big-cover");
+  bigCoverEl.id = "big-cover";
   chapterListEl.appendChild(actualChapterListEl);
   chapterListEl.appendChild(bigCoverEl);
 
@@ -136,8 +136,8 @@ async function openChapterList({ title, imgSrc }) {
     actualChapterListEl.appendChild(chapterEl);
     bigCoverEl.src = imgSrc;
     // Looks great!
-    bigCoverEl.width = 500;
     bigCoverEl.height = 500;
+    bigCoverEl.width = bigCoverEl.height / 1.5;
   }
 }
 
