@@ -2,8 +2,10 @@ import {
   updateElementHiddenAttributes,
   buildLibraryView,
   openChapterList,
+  closeChapterList,
 } from "./ui.js";
 
+const initializationState = Symbol("init");
 const libraryViewState = Symbol("libraryView");
 const chapterListState = Symbol("chapterList");
 const chapterViewState = Symbol("chapterView");
@@ -13,7 +15,7 @@ let currentStateValue;
 
 function initState() {
   currentStateValue = {
-    currentStateSymbol: libraryViewState,
+    currentStateSymbol: initializationState,
     libraryViewValid: false,
     hooks: [],
   };
@@ -43,14 +45,26 @@ function registerOneshotHook(f, from, to) {
 
 // Based on current state values, produce
 // the desired UI
-async function render(args) {
-  let state = currentState();
+async function render(stateTransition, args) {
+  let { from, to } = stateTransition;
 
-  switch (state.currentStateSymbol) {
+  updateElementHiddenAttributes(stateTransition);
+
+  switch (from) {
     case libraryViewState:
-      if (!state.libraryViewValid) {
+      break;
+    case chapterListState:
+      closeChapterList();
+      break;
+    case chapterViewState:
+      break;
+  }
+
+  switch (to) {
+    case libraryViewState:
+      if (!currentStateValue.libraryViewValid) {
         await buildLibraryView();
-        state.libraryViewValid = true;
+        currentStateValue.libraryViewValid = true;
       }
       break;
     case chapterListState:
@@ -84,12 +98,11 @@ async function performStateTransition(newStateSymbol, args) {
       }
     }
 
-    updateElementHiddenAttributes(stateTransition);
     currentStateValue.hooks = newHooks;
     currentStateValue.currentStateSymbol = newStateSymbol;
 
     // Hide stuff that shouldn't be showing; unhide the other stuff!
-    await render(args);
+    await render(stateTransition, args);
   } else {
     console.log(
       `Erroneous state transition occurred (current state is ${currentState})`
@@ -97,14 +110,12 @@ async function performStateTransition(newStateSymbol, args) {
   }
 }
 
-async function invalidateLibraryView() {
+function invalidateLibraryView() {
   currentStateValue.libraryViewValid = false;
-  await render();
 }
 
 export {
   initState,
-  render,
   performStateTransition,
   chapterListState,
   chapterViewState,

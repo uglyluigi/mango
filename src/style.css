@@ -37,12 +37,35 @@ body {
 
 #library-container {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(6, 1fr);
 }
 
 #chapter-list-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;  
+}
+
+#chapter-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  
+}
+
+#chapter-list-close-button {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+}
+
+#chapter-list .chapter-list-entry {
+  text-align: center;
+  margin: 1em;
+  cursor: pointer;
+  width: 100%;
+}
+
+#chapter-list .chapter-list-entry:hover {
+  background-color: white;
 }
 
 .nav {

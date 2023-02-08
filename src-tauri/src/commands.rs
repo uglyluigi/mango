@@ -29,6 +29,19 @@ pub fn get_chapter_list(series: String) -> Vec<String> {
 	ret
 }
 
+#[tauri::command]
+pub fn get_chapter_list_2(series: String) -> Vec<(i32, String)> {
+	let mut ret = vec![];
+
+	let series = LIBRARY.series_by_name(series).unwrap();
+
+	for chap in &series.chapters {
+		ret.push((chap.chapter_number, format!("Chapter {}", chap.chapter_number)));
+	}
+
+	ret
+}
+
 pub fn get_chapter_images(series: String) -> Vec<Vec<u8>> {
     let mut ret: Vec<Vec<u8>> = vec![];
     let series = LIBRARY.series_by_name(series);

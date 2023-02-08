@@ -13,4 +13,13 @@ async function get_chapter_list(series) {
   return await invoke("get_chapter_list", { series });
 }
 
-export { get_library, get_resource_server_url, get_chapter_list };
+async function get_chapter_list_2(series) {
+  return await invoke("get_chapter_list_2", { series });
+}
+
+export {
+  get_library,
+  get_resource_server_url,
+  get_chapter_list,
+  get_chapter_list_2,
+};

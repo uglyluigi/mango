@@ -2,6 +2,7 @@ import {
   get_resource_server_url,
   get_library,
   get_chapter_list,
+  get_chapter_list_2,
 } from "./invokes.js";
 import {
   performStateTransition,
@@ -100,14 +101,38 @@ async function buildLibraryView() {
 }
 
 async function openChapterList({ title, imgSrc }) {
-  let chapters = await get_chapter_list(title);
-  const actualChapterListEl = document.getElementById("chapter-list");
-  const bigCoverEl = document.getElementById("big-cover");
+  let chapInfo = await get_chapter_list_2(title);
 
-  for (let chapter of chapters) {
+  const button = document.createElement("button");
+  button.onclick = async function () {
+    await performStateTransition(libraryViewState);
+  }
+  button.id = "chapter-list-close-button";
+  button.innerHTML = "X";
+  chapterListEl.appendChild(button);
+
+  chapInfo.sort((a, b) => {
+    let [chapNum1, _] = a;
+    let [chapNum2, __] = b;
+    return chapNum1 > chapNum2;
+  });
+
+  const actualChapterListEl = document.createElement("div");
+  actualChapterListEl.classList.add("chapter-list");
+  const bigCoverEl = document.createElement("img");
+  bigCoverEl.classList.add("big-cover");
+  chapterListEl.appendChild(actualChapterListEl);
+  chapterListEl.appendChild(bigCoverEl);
+
+  for (let chapter of chapInfo) {
+    let [chapNum, chapString] = chapter;
+
     let chapterEl = document.createElement("div");
     chapterEl.classList.add("chapter-list-entry");
-    chapterEl.textContent = chapter;
+    chapterEl.textContent = chapString;
+    chapterEl.addEventListener("click", () => {
+      console.log("Chapter clicked: " + chapNum);
+    });
     actualChapterListEl.appendChild(chapterEl);
     bigCoverEl.src = imgSrc;
     // Looks great!
@@ -116,4 +141,8 @@ async function openChapterList({ title, imgSrc }) {
   }
 }
 
-export { updateElementHiddenAttributes, buildLibraryView, openChapterList };
+function closeChapterList() {
+  document.getElementById("chapter-list-container").replaceChildren([]);
+}
+
+export { updateElementHiddenAttributes, buildLibraryView, openChapterList, closeChapterList };

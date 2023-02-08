@@ -74,7 +74,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_library,
             get_resource_server_url,
-            get_chapter_list
+            get_chapter_list,
+            get_chapter_list_2
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
