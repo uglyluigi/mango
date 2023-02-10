@@ -71,6 +71,8 @@ async function render(stateTransition, args) {
     case libraryViewState:
       break;
     case chapterListState:
+      // Don't destroy the chapter list if the user is going to
+      // the chapter view
       if (to !== chapterViewState) {
         destroyChapterList();
       }
@@ -82,12 +84,18 @@ async function render(stateTransition, args) {
 
   switch (to) {
     case libraryViewState:
+      // Building the library view is expensive;
+      // only re-do it if specifically requested
+      // using invalidateLibraryView followed by
+      // performStateTransition
       if (!currentStateValue.libraryViewValid) {
         await buildLibraryView();
         currentStateValue.libraryViewValid = true;
       }
       break;
     case chapterListState:
+      // Don't need to re-opem the chapter list state if the
+      // user is coming from the chapter view
       if (from !== chapterViewState) {
         await openChapterList(args);
       }

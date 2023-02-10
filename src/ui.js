@@ -97,6 +97,11 @@ async function openChapterList({ title, imgSrc }) {
     let [chapNum2, __] = b;
     return chapNum1 > chapNum2;
   });
+  
+  const chapterTitleLabel = document.createElement("h2");
+  chapterTitleLabel.id = "chapter-title-label";
+  chapterTitleLabel.textContent = title;
+  chapterListEl.appendChild(chapterTitleLabel);
 
   const actualChapterListEl = document.createElement("div");
   actualChapterListEl.id = "chapter-list";
@@ -132,7 +137,9 @@ function destroyChapterList() {
 
 async function openChapterView({ title, chapter }) {
   makeBackButton(chapterViewEl, async function () {
-    await performStateTransition(chapterListState, { title });
+    // Does not require args, because the UI does not destroy
+    // the chapterList for this chapter when moving to the chapterView
+    await performStateTransition(chapterListState, null);
   });
 }
 
@@ -144,6 +151,7 @@ function makeBackButton(parent, cb) {
   const button = document.createElement("label");
   button.onclick = cb;
   button.id = "chapter-list-close-button";
+  button.classList.add("back-button");
   const buttonImg = document.createElement("img");
   buttonImg.src = "./assets/arrow_back.svg";
   button.classList.add("shrink-on-hover");
