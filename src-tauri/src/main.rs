@@ -7,13 +7,14 @@ use std::io::Write;
 
 use categorizer_service::library::Library;
 use config::MANGO_CONFIG;
+use tauri::command;
 use warp::{http::Response, hyper::StatusCode, Filter};
 
 use crate::categorizer_service::library::LIBRARY;
 
 mod categorizer_service;
-mod config;
 mod commands;
+mod config;
 use commands::*;
 
 fn main() {
@@ -28,25 +29,20 @@ fn main() {
 
             match LIBRARY.series_by_name(deco_series_name.to_string()) {
                 Some(serie) => {
-                    let mut img_data = vec![];
-
-                    for cover in &serie.covers {
-                        let path = cover.path.to_str().unwrap();
-                        let b64_data = image_base64::to_base64(path);
-
-                        // FIXME should support PNG and other formats too
-                        // FIXME does this even require base64 encoding?
-                        img_data.push(format!("{}", b64_data));
-                    }
+                    let cover = &serie.covers[0];
+                    let data = std::fs::read(&cover.path).expect("Failed to get bytes");
+                    
 
                     Response::builder()
                         .status(StatusCode::OK)
                         .header("Access-Control-Allow-Origin", "http://127.0.0.1:1430")
-                        .body(serde_json::to_string(&img_data).unwrap())
+                        .header("Content-Type", "image/jpeg")
+                        .header("Content-Length", std::mem::size_of::<u8>() * data.len())
+                        .body(data)
                 }
                 None => Response::builder()
                     .status(StatusCode::NOT_FOUND)
-                    .body("".to_owned()),
+                    .body(vec![]),
             }
         });
 
@@ -75,7 +71,9 @@ fn main() {
             get_library,
             get_resource_server_url,
             get_chapter_list,
-            get_chapter_list_2
+            get_chapter_list_2,
+            get_chapter_images,
+            get_cover
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

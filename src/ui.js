@@ -60,6 +60,8 @@ async function requestCoverForSeries(seriesTitle, cb) {
 // Accepting covers from the back-end and
 // creating their img elements on the UI
 async function buildLibraryView() {
+  let resource_server_url = await get_resource_server_url();
+
   // FIXME this is expensive...
   // just write a separate command for getting cover bytes
   let library = await get_library();
@@ -77,13 +79,9 @@ async function buildLibraryView() {
     // Image element that contains the cover data
     let imgEl = document.createElement("img");
 
-    await requestCoverForSeries(series.title, function (responseText) {
-      //FIXME this is truly horrible!!!!
-      // Right now it's sending over arrays of HUGE base64 blobs
-      // and then parsing them... ouch
-      // maybe just return the currently selected cover instead?
-      // will probably just redo this whole system
-      imgEl.src = JSON.parse(responseText)[0];
+    await fetch(`${resource_server_url}covers/${series.title}`).then(async (res) => {
+      let blob = await res.blob();
+      imgEl.src = URL.createObjectURL(blob);
       imgEl.height = 150;
       imgEl.width = imgEl.height / 1.5;
 
@@ -106,7 +104,7 @@ async function openChapterList({ title, imgSrc }) {
   const button = document.createElement("button");
   button.onclick = async function () {
     await performStateTransition(libraryViewState);
-  }
+  };
   button.id = "chapter-list-close-button";
   button.innerHTML = "X";
   chapterListEl.appendChild(button);
@@ -145,4 +143,9 @@ function closeChapterList() {
   document.getElementById("chapter-list-container").replaceChildren([]);
 }
 
-export { updateElementHiddenAttributes, buildLibraryView, openChapterList, closeChapterList };
+export {
+  updateElementHiddenAttributes,
+  buildLibraryView,
+  openChapterList,
+  closeChapterList,
+};
