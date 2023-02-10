@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use crate::{
     categorizer_service::{
         self,
@@ -19,20 +17,7 @@ pub fn get_resource_server_url() -> String {
 }
 
 #[tauri::command]
-pub fn get_chapter_list(series: String) -> Vec<String> {
-    let mut ret = vec![];
-
-    let series = LIBRARY.series_by_name(series).unwrap();
-
-    for chap in &series.chapters {
-        ret.push(format!("Chapter {}", chap.chapter_number));
-    }
-
-    ret
-}
-
-#[tauri::command]
-pub fn get_chapter_list_2(series: String) -> Vec<(i32, String)> {
+pub fn get_chapter_list(series: String) -> Vec<(i32, String)> {
     let mut ret = vec![];
 
     let series = LIBRARY.series_by_name(series).unwrap();
@@ -47,41 +32,7 @@ pub fn get_chapter_list_2(series: String) -> Vec<(i32, String)> {
     ret
 }
 
-// Returns the bytes of each image inside of the chapter, maybe in order? I am not sure.
 #[tauri::command]
-pub fn get_chapter_images(series: String, chapter: i32) -> Vec<Vec<u8>> {
-    let mut ret: Vec<Vec<u8>> = vec![];
-    let series = LIBRARY.series_by_name(series);
-
-    match series {
-        Some(series) => match series.chapter(chapter) {
-            Some(chap) => {
-                for path in &chap.image_paths {
-                    match get_img_bytes(path) {
-                        Ok(bytes) => ret.push(bytes),
-                        Err(e) => eprintln!("{:?}", e),
-                    }
-                }
-            }
-            None => eprintln!(
-                "Couldn\'t find chapter with number {} in series {}",
-                chapter, series.title
-            ),
-        },
-        None => (),
-    }
-
-    ret
-}
-
-fn get_img_bytes<P>(path: P) -> Result<Vec<u8>, std::io::Error>
-where
-    P: AsRef<Path>,
-{
-    let reader = image::io::Reader::open(path)?;
-
-    match reader.decode() {
-        Ok(dyn_img) => Ok(dyn_img.into_bytes().to_vec()),
-        Err(e) => Err(std::io::Error::new(std::io::ErrorKind::Other, e)),
-    }
+pub fn get_all_titles() -> Vec<String> {
+    LIBRARY.series.iter().map(|x| x.title.clone()).collect()
 }

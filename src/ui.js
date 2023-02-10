@@ -1,8 +1,7 @@
 import {
   get_resource_server_url,
-  get_library,
+  get_all_titles,
   get_chapter_list,
-  get_chapter_list_2,
 } from "./invokes.js";
 import {
   performStateTransition,
@@ -41,32 +40,14 @@ function updateElementHiddenAttributes(stateTransition) {
   }
 }
 
-async function requestCoverForSeries(seriesTitle, cb) {
-  let resource_server_url = await get_resource_server_url();
-  let url = new URL(`${resource_server_url}covers/${seriesTitle}`);
-  let xmlHttp = new XMLHttpRequest();
-  xmlHttp.open("GET", url, true);
-  xmlHttp.send();
-
-  xmlHttp.onload = function () {
-    if (xmlHttp.readyState === 4) {
-      if (xmlHttp.status === 200) {
-        cb(xmlHttp.responseText);
-      }
-    }
-  };
-}
-
 // Accepting covers from the back-end and
 // creating their img elements on the UI
 async function buildLibraryView() {
   let resource_server_url = await get_resource_server_url();
 
-  // FIXME this is expensive...
-  // just write a separate command for getting cover bytes
-  let library = await get_library();
+  let titles = await get_all_titles();
 
-  for (let series of library.series) {
+  for (let title of titles) {
     let coverContainer = document.createElement("div");
     coverContainer.classList.add("cover-container");
     coverContainer.classList.add("shrink-on-hover");
@@ -74,12 +55,12 @@ async function buildLibraryView() {
     // Title element
     let coverTitle = document.createElement("span");
     coverTitle.classList = "cover-title";
-    coverTitle.textContent = series.title;
+    coverTitle.textContent = title;
 
     // Image element that contains the cover data
     let imgEl = document.createElement("img");
 
-    await fetch(`${resource_server_url}covers/${series.title}`).then(async (res) => {
+    await fetch(`${resource_server_url}covers/${title}`).then(async (res) => {
       let blob = await res.blob();
       imgEl.src = URL.createObjectURL(blob);
       imgEl.height = 150;
@@ -89,7 +70,7 @@ async function buildLibraryView() {
       coverContainer.appendChild(coverTitle);
       coverContainer.addEventListener("click", async () => {
         await performStateTransition(chapterListState, {
-          title: series.title,
+          title,
           imgSrc: imgEl.src,
         });
       });
@@ -99,7 +80,7 @@ async function buildLibraryView() {
 }
 
 async function openChapterList({ title, imgSrc }) {
-  let chapInfo = await get_chapter_list_2(title);
+  let chapInfo = await get_chapter_list(title);
 
   const button = document.createElement("button");
   button.onclick = async function () {

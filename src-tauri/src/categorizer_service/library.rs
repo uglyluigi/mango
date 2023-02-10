@@ -62,7 +62,7 @@ impl Series {
     pub fn chapter(&self, chapter_num: i32) -> Option<&Chapter> {
         for chapter in &self.chapters {
             if chapter.chapter_number == chapter_num {
-                return Some(&chapter)
+                return Some(&chapter);
             }
         }
 
@@ -116,7 +116,7 @@ impl Library {
 
     pub fn series_by_name(&self, name: String) -> Option<&Series> {
         //FIXME may want to use a hash table for series storage instead
-        
+
         for serie in &self.series {
             if serie.title == name {
                 return Some(serie);

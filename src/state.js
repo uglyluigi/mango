@@ -5,14 +5,28 @@ import {
   closeChapterList,
 } from "./ui.js";
 
+// The state that the currentStateValue object defaults to
+// on creation
 const initializationState = Symbol("init");
+// The state that is active when the user is on the libraryView
 const libraryViewState = Symbol("libraryView");
+// The state that is active when the user has clicked on a series
+// in the library view and is viewing its list of chapters
 const chapterListState = Symbol("chapterList");
+// The state that is active when the user has clicked on a chapter
+// in a series and is viewing the chapter's images
 const chapterViewState = Symbol("chapterView");
+// The state that is active when there is a dialog window open
 const dialogView = Symbol("dialogView");
 
 let currentStateValue;
 
+// Initializes the default state object. Should only be called once
+// Sets the current state to the initializationState, which doesn't
+// render anything on the UI, but might in the future.
+// main.js immediately moves to the libraryViewState anyway.
+// Also holds the value that tracks whether the library view needs to be
+// re-built. It is checked when moving between states.
 function initState() {
   currentStateValue = {
     currentStateSymbol: initializationState,
@@ -43,8 +57,9 @@ function registerOneshotHook(f, from, to) {
   registerStateHook(f, from, to, true);
 }
 
-// Based on current state values, produce
-// the desired UI
+// Based on current state values, call the ui
+// functions to update the UI to match the state
+// Also hides other components from inactive states
 async function render(stateTransition, args) {
   let { from, to } = stateTransition;
 
@@ -75,8 +90,22 @@ async function render(stateTransition, args) {
   }
 }
 
-// For chapterListState, args look like this:
+// This function is the only method that other parts of the front-end
+// can use to change the state of the front-end.
+// This function accepts a stateTransition object that looks like this:
+// { from: (state symbol), to: (state symbol) }
+// As well as an optional args parameter that can contain arbitrary data
+// that is useful to expose to whatever functions will be running when
+// you are moving between states. For example:
+// for chapterListState, args look like this:
 // { title: String, imgSrc: String }
+// This object contains the title of the series that was clicked on
+// in addition to a string containing the URL of that series's cover.
+// Both of these pieces of information are displayed on the front-end
+// when entering the chapterList state, so it makes sense to provide them
+// when you are requesting a state transition.
+// State transitions that do not change the current state symbol are not
+// performed and are considered erroneous.
 async function performStateTransition(newStateSymbol, args) {
   if (newStateSymbol !== currentStateValue.currentStateSymbol) {
     const stateTransition = {

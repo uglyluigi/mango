@@ -74,8 +74,7 @@ fn main() {
             get_library,
             get_resource_server_url,
             get_chapter_list,
-            get_chapter_list_2,
-            get_chapter_images,
+            get_all_titles,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

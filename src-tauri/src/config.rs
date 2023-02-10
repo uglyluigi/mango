@@ -35,7 +35,10 @@ pub struct Config {
 
 impl Config {
     pub fn resource_server_url(&self) -> String {
-        format!("https://{}:{}/", self.resource_server_domain, self.resource_server_port)
+        format!(
+            "https://{}:{}/",
+            self.resource_server_domain, self.resource_server_port
+        )
     }
 }
 
@@ -51,7 +54,6 @@ impl Default for Config {
         }
     }
 }
-
 
 const CONFIG_FILE_NAME: &'static str = "config.json";
 
