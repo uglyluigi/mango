@@ -53,8 +53,15 @@ body {
 
 #chapter-list-close-button {
   position: fixed;
-  top: 10px;
-  left: 10px;
+  bottom: 10px;
+  left: 15px;
+  border: none;
+  cursor: pointer;
+}
+
+#chapter-list-close-button > img {
+  height: 20px;
+  width: 20px;
 }
 
 #chapter-list .chapter-list-entry {

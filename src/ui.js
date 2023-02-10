@@ -88,13 +88,9 @@ async function buildLibraryView() {
 async function openChapterList({ title, imgSrc }) {
   let chapInfo = await get_chapter_list(title);
 
-  const button = document.createElement("button");
-  button.onclick = async function () {
+  makeBackButton(chapterListEl, async function () {
     await performStateTransition(libraryViewState);
-  };
-  button.id = "chapter-list-close-button";
-  button.innerHTML = "X";
-  chapterListEl.appendChild(button);
+  });
 
   chapInfo.sort((a, b) => {
     let [chapNum1, _] = a;
@@ -115,8 +111,11 @@ async function openChapterList({ title, imgSrc }) {
     let chapterEl = document.createElement("div");
     chapterEl.classList.add("chapter-list-entry");
     chapterEl.textContent = chapString;
-    chapterEl.addEventListener("click", () => {
-      console.log("Chapter clicked: " + chapNum);
+    chapterEl.addEventListener("click", async () => {
+      await performStateTransition(chapterViewState, {
+        title,
+        chapter: chapNum,
+      });
     });
     actualChapterListEl.appendChild(chapterEl);
     bigCoverEl.src = imgSrc;
@@ -126,18 +125,37 @@ async function openChapterList({ title, imgSrc }) {
   }
 }
 
-async function openChapterView({ title, chapter }) {
-  
+// Removes all children of the chapter-list container
+function destroyChapterList() {
+  chapterListEl.replaceChildren([]);
 }
 
-// Removes all children of the chapter-list container
-function closeChapterList() {
-  document.getElementById("chapter-list-container").replaceChildren([]);
+async function openChapterView({ title, chapter }) {
+  makeBackButton(chapterViewEl, async function () {
+    await performStateTransition(chapterListState, { title });
+  });
+}
+
+async function destroyChapterView() {
+  chapterViewEl.replaceChildren([]);
+}
+
+function makeBackButton(parent, cb) {
+  const button = document.createElement("label");
+  button.onclick = cb;
+  button.id = "chapter-list-close-button";
+  const buttonImg = document.createElement("img");
+  buttonImg.src = "./assets/arrow_back.svg";
+  button.classList.add("shrink-on-hover");
+  button.appendChild(buttonImg);
+  parent.appendChild(button);
 }
 
 export {
   updateElementHiddenAttributes,
   buildLibraryView,
   openChapterList,
-  closeChapterList,
+  destroyChapterList,
+  openChapterView,
+  destroyChapterView,
 };

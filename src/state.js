@@ -2,7 +2,9 @@ import {
   updateElementHiddenAttributes,
   buildLibraryView,
   openChapterList,
-  closeChapterList,
+  destroyChapterList,
+  openChapterView,
+  destroyChapterView,
 } from "./ui.js";
 
 // The state that the currentStateValue object defaults to
@@ -69,9 +71,12 @@ async function render(stateTransition, args) {
     case libraryViewState:
       break;
     case chapterListState:
-      closeChapterList();
+      if (to !== chapterViewState) {
+        destroyChapterList();
+      }
       break;
     case chapterViewState:
+      destroyChapterView();
       break;
   }
 
@@ -83,9 +88,12 @@ async function render(stateTransition, args) {
       }
       break;
     case chapterListState:
-      await openChapterList(args);
+      if (from !== chapterViewState) {
+        await openChapterList(args);
+      }
       break;
     case chapterViewState:
+      await openChapterView(args);
       break;
   }
 }
