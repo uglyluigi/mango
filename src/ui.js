@@ -141,6 +141,8 @@ async function openChapterView({ title, chapter }) {
     // the chapterList for this chapter when moving to the chapterView
     await performStateTransition(chapterListState, null);
   });
+
+  
 }
 
 async function destroyChapterView() {

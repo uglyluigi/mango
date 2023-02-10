@@ -19,7 +19,7 @@ fn main() {
     rt.spawn(async {
         println!("Starting warp server");
 
-        let resource_get = warp::path!("covers" / String).map(|series_name: String| {
+        let get_cover = warp::path!("covers" / String).map(|series_name: String| {
             let deco_series_name = urlencoding::decode(&series_name).unwrap();
 
             match LIBRARY.series_by_name(deco_series_name.to_string()) {
@@ -40,7 +40,40 @@ fn main() {
             }
         });
 
-        let (_, server) = warp::serve(resource_get)
+        // chapter_image/series_title/chapter_num/image_num
+        let get_chapter_images = warp::path!("chapter_image" / String / i32 / i32)
+            .map(|series_name: String, chapter: i32, image: i32| {
+                let chapter_image = &LIBRARY
+                    .series_by_name(series_name)
+                    .expect(&format!("Couldn\'t find series"))
+                    .chapter(chapter)
+                    .unwrap()
+                    .image_paths[image as usize];
+
+                let bytes = std::fs::read(chapter_image).expect("Failed to get bytes!!!");
+
+                Response::builder()
+                    .header("Access-Control-Allow-Origin", "http://127.0.0.1:1430")
+                    .header("Content-Type", "image/jpeg")
+                    .header("Content-Length", std::mem::size_of::<u8>() * bytes.len())
+                    .body(bytes)
+            })
+            .or(get_cover);
+
+        let get_num_of_chapter_images = warp::path!("image_count" / String / i32)
+            .map(|series_name: String, chapter_num: i32| {
+                let series = LIBRARY
+                    .series_by_name(series_name)
+                    .expect("Couldn\'t find series");
+
+                Response::builder().body(format!(
+                    "{}",
+                    series.chapter(chapter_num).unwrap().image_paths.len()
+                ))
+            })
+            .or(get_chapter_images);
+
+        let (_, server) = warp::serve(get_num_of_chapter_images)
             .tls()
             .cert_path("./tls/Mango.crt")
             .key_path("./tls/Mango.key")
