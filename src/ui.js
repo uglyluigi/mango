@@ -14,6 +14,9 @@ const libraryContainerEl = document.getElementById("library-container");
 const chapterListEl = document.getElementById("chapter-list-container");
 const chapterViewEl = document.getElementById("chapter-view-container");
 
+// Hides the elements in the UI document based on
+// the stateTransition object.
+// Does so by applying/removing a CSS class called "hidden"
 function updateElementHiddenAttributes(stateTransition) {
   switch (stateTransition.to) {
     case libraryViewState:
@@ -79,6 +82,9 @@ async function buildLibraryView() {
   }
 }
 
+// Builds the chapter list
+// Accepts the title of the series
+// and the src URL of that series's cover
 async function openChapterList({ title, imgSrc }) {
   let chapInfo = await get_chapter_list(title);
 
@@ -120,6 +126,11 @@ async function openChapterList({ title, imgSrc }) {
   }
 }
 
+async function openChapterView({ title, chapter }) {
+  
+}
+
+// Removes all children of the chapter-list container
 function closeChapterList() {
   document.getElementById("chapter-list-container").replaceChildren([]);
 }

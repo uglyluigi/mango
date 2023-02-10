@@ -3,14 +3,9 @@
     windows_subsystem = "windows"
 )]
 
-use std::io::Write;
-
-use categorizer_service::library::Library;
-use config::MANGO_CONFIG;
-use tauri::command;
-use warp::{http::Response, hyper::StatusCode, Filter};
-
 use crate::categorizer_service::library::LIBRARY;
+use std::io::Write;
+use warp::{http::Response, hyper::StatusCode, Filter};
 
 mod categorizer_service;
 mod commands;
@@ -71,7 +66,6 @@ fn main() {
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            get_library,
             get_resource_server_url,
             get_chapter_list,
             get_all_titles,
