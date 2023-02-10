@@ -47,15 +47,6 @@ pub fn get_chapter_list_2(series: String) -> Vec<(i32, String)> {
     ret
 }
 
-#[tauri::command]
-pub fn get_cover(series: String) -> Vec<u8> {
-    match LIBRARY.series_by_name(series) {
-        Some(series) => get_img_bytes(&series.covers[0].path)
-            .expect(&format!("Failed to get cover bytes of {}", series.title)),
-        None => vec![],
-    }
-}
-
 // Returns the bytes of each image inside of the chapter, maybe in order? I am not sure.
 #[tauri::command]
 pub fn get_chapter_images(series: String, chapter: i32) -> Vec<Vec<u8>> {

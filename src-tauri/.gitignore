@@ -9,5 +9,6 @@
 MangaLibrary/*
 library.json
 config.json
+tls/
 
 

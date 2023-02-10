@@ -31,7 +31,6 @@ fn main() {
                 Some(serie) => {
                     let cover = &serie.covers[0];
                     let data = std::fs::read(&cover.path).expect("Failed to get bytes");
-                    
 
                     Response::builder()
                         .status(StatusCode::OK)
@@ -46,17 +45,21 @@ fn main() {
             }
         });
 
-        let (_, server) = warp::serve(resource_get).bind_with_graceful_shutdown(
-            (
-                [127, 0, 0, 1],
-                config::MANGO_CONFIG.resource_server_port().clone(),
-            ),
-            async move {
-                tokio::signal::ctrl_c()
-                    .await
-                    .expect("Failed to shutdown warp server")
-            },
-        );
+        let (_, server) = warp::serve(resource_get)
+            .tls()
+            .cert_path("./tls/Mango.crt")
+            .key_path("./tls/Mango.key")
+            .bind_with_graceful_shutdown(
+                (
+                    [127, 0, 0, 1],
+                    config::MANGO_CONFIG.resource_server_port().clone(),
+                ),
+                async move {
+                    tokio::signal::ctrl_c()
+                        .await
+                        .expect("Failed to shutdown warp server")
+                },
+            );
 
         server.await;
         // Often the runtime exits before stdout actually gets a chance to flush,
@@ -73,7 +76,6 @@ fn main() {
             get_chapter_list,
             get_chapter_list_2,
             get_chapter_images,
-            get_cover
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
