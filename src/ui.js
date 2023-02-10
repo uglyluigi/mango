@@ -97,7 +97,7 @@ async function openChapterList({ title, imgSrc }) {
     let [chapNum2, __] = b;
     return chapNum1 > chapNum2;
   });
-  
+
   const chapterTitleLabel = document.createElement("h2");
   chapterTitleLabel.id = "chapter-title-label";
   chapterTitleLabel.textContent = title;
@@ -136,13 +136,66 @@ function destroyChapterList() {
 }
 
 async function openChapterView({ title, chapter }) {
+  let resource_server_url = await get_resource_server_url();
+
   makeBackButton(chapterViewEl, async function () {
     // Does not require args, because the UI does not destroy
     // the chapterList for this chapter when moving to the chapterView
     await performStateTransition(chapterListState, null);
   });
 
-  
+  fetch(`${resource_server_url}image_count/${title}/${chapter}`).then(
+    async (res) => {
+      let numImages = parseInt(await res.text());
+      let map = new Map();
+      let promises = [];
+
+      for (let i = 0; i < numImages; i++) {
+        promises.push(
+          fetch(
+            `${resource_server_url}chapter_image/${title}/${chapter}/${i}`
+          ).then(async (res) => {
+            map.set(i, await res.blob());
+          })
+        );
+      }
+
+      Promise.all(promises).then(() => {
+        let currentImg = 0;
+        let imgEl = document.createElement("img");
+        imgEl.width = 300;
+
+        let updateImg = function () {
+          let url = URL.createObjectURL(map.get(currentImg));
+          imgEl.src = url;
+          imgEl.onload = () => {
+            URL.revokeObjectURL(url);
+          };
+        };
+
+        updateImg();
+
+        let buttonL = document.createElement("button");
+        buttonL.innerHTML = "PREVIOUS";
+        let buttonR = document.createElement("button");
+        buttonR.innerHTML = "NEXT";
+
+        buttonL.addEventListener("click", function () {
+          currentImg--;
+          updateImg();
+        });
+
+        buttonR.addEventListener("click", function () {
+          currentImg++;
+          updateImg();
+        });
+
+        chapterViewEl.appendChild(buttonL);
+        chapterViewEl.appendChild(imgEl);
+        chapterViewEl.appendChild(buttonR);
+      });
+    }
+  );
 }
 
 async function destroyChapterView() {

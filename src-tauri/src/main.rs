@@ -66,10 +66,12 @@ fn main() {
                     .series_by_name(series_name)
                     .expect("Couldn\'t find series");
 
-                Response::builder().body(format!(
-                    "{}",
-                    series.chapter(chapter_num).unwrap().image_paths.len()
-                ))
+                Response::builder()
+                    .header("Access-Control-Allow-Origin", "http://127.0.0.1:1430")
+                    .body(format!(
+                        "{}",
+                        series.chapter(chapter_num).unwrap().image_paths.len()
+                    ))
             })
             .or(get_chapter_images);
 
