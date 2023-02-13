@@ -14,8 +14,13 @@
   -webkit-text-size-adjust: 100%;
 }
 
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
+  height: 100%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -137,8 +142,12 @@ body {
 #chapter-view-container {
   display: grid;
   grid-template-columns: 0.1fr 1fr 0.1fr;
+  height: 100%;
 }
 
-#chapter-view-container > img {
-  height: 100%;
+.chapter-img-wrapper {
+  text-align: center;
+}
+.chapter-img-wrapper > img {
+  max-height: 100vh;
 }

@@ -163,7 +163,9 @@ async function openChapterView({ title, chapter }) {
       Promise.all(promises).then(() => {
         let currentImg = 0;
         let imgEl = document.createElement("img");
-        imgEl.width = 300;
+        let imgWrapper = document.createElement("div");
+        imgWrapper.classList.add("chapter-img-wrapper")
+        imgWrapper.appendChild(imgEl);
 
         let updateImg = function () {
           let url = URL.createObjectURL(map.get(currentImg));
@@ -191,7 +193,7 @@ async function openChapterView({ title, chapter }) {
         });
 
         chapterViewEl.appendChild(buttonL);
-        chapterViewEl.appendChild(imgEl);
+        chapterViewEl.appendChild(imgWrapper);
         chapterViewEl.appendChild(buttonR);
       });
     }
