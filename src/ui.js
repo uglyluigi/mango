@@ -183,10 +183,11 @@ async function openChapterView({ title, chapter }) {
         buttonR.innerHTML = "NEXT";
 
         let updateDisbled = () => {
+          let hidden = "visibility: hidden";
           buttonL.disabled = currentImg === 0;
-          buttonL.hidden = buttonL.disabled;
+          buttonL.style = buttonL.disabled ? hidden : "";
           buttonR.disabled = currentImg === numImages - 1;
-          buttonR.hidden = buttonR.disabled;
+          buttonR.hidden = buttonR.disabled ? hidden : "";
         };
 
         updateDisbled();
