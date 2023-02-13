@@ -140,14 +140,19 @@ body {
 }
 
 #chapter-view-container {
-  display: grid;
-  grid-template-columns: 0.1fr 1fr 0.1fr;
+  display: flex;
   height: 100%;
+  max-height: calc(100vh - 42px);
+  justify-content: space-between;
 }
 
 .chapter-img-wrapper {
   text-align: center;
+  height: calc(100vh - 10%);
 }
+
 .chapter-img-wrapper > img {
-  max-height: 100vh;
+  object-fit: contain;
+  height: 100%;
+  width: 100%;
 }

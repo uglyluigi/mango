@@ -26,7 +26,7 @@ function updateElementHiddenAttributes(stateTransition) {
       chapterListEl.classList.remove("hidden");
       break;
     case chapterViewState:
-      //chapterViewState.classList.remove("hidden");
+      chapterViewEl.classList.remove("hidden");
       break;
   }
 
@@ -38,7 +38,7 @@ function updateElementHiddenAttributes(stateTransition) {
       chapterListEl.classList.add("hidden");
       break;
     case chapterViewState:
-      //chapterViewState.classList.add("hidden");
+      chapterViewEl.classList.add("hidden");
       break;
   }
 }
@@ -182,14 +182,26 @@ async function openChapterView({ title, chapter }) {
         let buttonR = document.createElement("button");
         buttonR.innerHTML = "NEXT";
 
+        let updateDisbled = () => {
+          buttonL.disabled = currentImg === 0;
+          buttonL.hidden = buttonL.disabled;
+          buttonR.disabled = currentImg === numImages - 1;
+          buttonR.hidden = buttonR.disabled;
+        };
+
+        updateDisbled();
+        updateImg();
+
         buttonL.addEventListener("click", function () {
           currentImg--;
           updateImg();
+          updateDisbled();
         });
 
         buttonR.addEventListener("click", function () {
           currentImg++;
           updateImg();
+          updateDisbled();
         });
 
         chapterViewEl.appendChild(buttonL);
