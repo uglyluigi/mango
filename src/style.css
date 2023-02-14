@@ -95,7 +95,7 @@ body {
 }
 
 .nav {
-  background-color: #498467;
+  background-color: #253c78;
   height: fit-content;
   display: flex;
   flex-direction: row;
@@ -179,4 +179,10 @@ body {
 }
 
 .library-view-cover-container {
+}
+
+.nav > a {
+  margin-left: auto;
+  margin-right: 0.5em;
+  display: flex;
 }

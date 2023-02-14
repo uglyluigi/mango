@@ -31,3 +31,8 @@ pub fn get_chapter_list(series: String) -> Vec<(i32, String)> {
 pub fn get_all_titles() -> Vec<String> {
     LIBRARY.series.iter().map(|x| x.title.clone()).collect()
 }
+
+#[tauri::command]
+pub fn rebuild_library() {
+    
+}
