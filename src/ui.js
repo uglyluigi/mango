@@ -63,7 +63,7 @@ async function buildLibraryView() {
     coverContainer.classList.add("shrink-on-hover");
 
     // Title element
-    let coverTitle = document.createElement("span");
+    let coverTitle = document.createElement("div");
     coverTitle.classList = "cover-title";
     coverTitle.textContent = title;
 
@@ -72,11 +72,14 @@ async function buildLibraryView() {
 
     await fetch(`${resource_server_url}covers/${title}`).then(async (res) => {
       let blob = await res.blob();
+      imgEl.classList.add("library-view-cover");
       imgEl.src = URL.createObjectURL(blob);
-      imgEl.height = 150;
-      imgEl.width = imgEl.height / 1.5;
 
-      coverContainer.appendChild(imgEl);
+      const libraryCoverContainer = document.createElement("div");
+      libraryCoverContainer.appendChild(imgEl);
+      libraryCoverContainer.classList.add("library-view-cover-container")
+
+      coverContainer.appendChild(libraryCoverContainer);
       coverContainer.appendChild(coverTitle);
       coverContainer.addEventListener("click", async () => {
         await performStateTransition(chapterListState, {
@@ -196,8 +199,6 @@ async function openChapterView({ title, chapter }) {
             URL.revokeObjectURL(url);
           };
         };
-
-        updateImg();
 
         let buttonL = document.createElement("button");
         buttonL.innerHTML = "PREV";
