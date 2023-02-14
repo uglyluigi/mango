@@ -8,11 +8,18 @@ import {
   chapterListState,
   libraryViewState,
   chapterViewState,
+  is,
 } from "./state.js";
 
 const libraryContainerEl = document.getElementById("library-container");
 const chapterListEl = document.getElementById("chapter-list-container");
 const chapterViewEl = document.getElementById("chapter-view-container");
+
+// This field is set to the callback that's used to handle key events
+// so it can be removed without being mistaken for a different keyboard
+// callback that I may add later
+let chapterViewArrowKeyAndEscapeKeyListener;
+let chapterListEscapeKeyListener;
 
 // Hides the elements in the UI document based on
 // the stateTransition object.
@@ -88,7 +95,7 @@ async function buildLibraryView() {
 async function openChapterList({ title, imgSrc }) {
   let chapInfo = await get_chapter_list(title);
 
-  makeBackButton(chapterListEl, async function () {
+  makeBackButton(chapterListEl, async () => {
     await performStateTransition(libraryViewState);
   });
 
@@ -101,14 +108,17 @@ async function openChapterList({ title, imgSrc }) {
   const chapterTitleLabel = document.createElement("h2");
   chapterTitleLabel.id = "chapter-title-label";
   chapterTitleLabel.textContent = title;
-  chapterListEl.appendChild(chapterTitleLabel);
 
   const actualChapterListEl = document.createElement("div");
   actualChapterListEl.id = "chapter-list";
+  actualChapterListEl.appendChild(chapterTitleLabel);
   const bigCoverEl = document.createElement("img");
   bigCoverEl.id = "big-cover";
   chapterListEl.appendChild(actualChapterListEl);
-  chapterListEl.appendChild(bigCoverEl);
+  const bigCoverWrapper = document.createElement("div");
+  bigCoverWrapper.id = "big-cover-wrapper";
+  bigCoverWrapper.appendChild(bigCoverEl);
+  chapterListEl.appendChild(bigCoverWrapper);
 
   for (let chapter of chapInfo) {
     let [chapNum, chapString] = chapter;
@@ -124,21 +134,33 @@ async function openChapterList({ title, imgSrc }) {
     });
     actualChapterListEl.appendChild(chapterEl);
     bigCoverEl.src = imgSrc;
-    // Looks great!
-    bigCoverEl.height = 500;
-    bigCoverEl.width = bigCoverEl.height / 1.5;
   }
+
+  const keyboardCallback = async (e) => {
+    // This callback can be active on the chapterView as well
+    // in some situations due to not destroying the view before
+    // it when moving to the chapterView.
+    if (!is(chapterListState)) return;
+
+    if (e.key === "Escape") {
+      await performStateTransition(libraryViewState);
+    }
+  };
+
+  document.addEventListener("keydown", keyboardCallback);
+  chapterListEscapeKeyListener = keyboardCallback;
 }
 
 // Removes all children of the chapter-list container
 function destroyChapterList() {
   chapterListEl.replaceChildren([]);
+  document.removeEventListener("keydown", chapterListEscapeKeyListener);
 }
 
 async function openChapterView({ title, chapter }) {
   let resource_server_url = await get_resource_server_url();
 
-  makeBackButton(chapterViewEl, async function () {
+  makeBackButton(chapterViewEl, async () => {
     // Does not require args, because the UI does not destroy
     // the chapterList for this chapter when moving to the chapterView
     await performStateTransition(chapterListState, null);
@@ -164,7 +186,7 @@ async function openChapterView({ title, chapter }) {
         let currentImg = 0;
         let imgEl = document.createElement("img");
         let imgWrapper = document.createElement("div");
-        imgWrapper.classList.add("chapter-img-wrapper")
+        imgWrapper.classList.add("chapter-img-wrapper");
         imgWrapper.appendChild(imgEl);
 
         let updateImg = function () {
@@ -178,36 +200,66 @@ async function openChapterView({ title, chapter }) {
         updateImg();
 
         let buttonL = document.createElement("button");
-        buttonL.innerHTML = "PREVIOUS";
+        buttonL.innerHTML = "PREV";
         let buttonR = document.createElement("button");
         buttonR.innerHTML = "NEXT";
 
         let updateDisbled = () => {
-          let hidden = "visibility: hidden";
+          const hidden = "visibility: hidden";
           buttonL.disabled = currentImg === 0;
           buttonL.style = buttonL.disabled ? hidden : "";
           buttonR.disabled = currentImg === numImages - 1;
-          buttonR.hidden = buttonR.disabled ? hidden : "";
+          buttonR.style = buttonR.disabled ? hidden : "";
+        };
+
+        let moveL = () => {
+          if (!buttonL.disabled) {
+            currentImg--;
+            updateImg();
+            updateDisbled();
+          }
+        };
+
+        let moveR = () => {
+          if (!buttonR.disabled) {
+            currentImg++;
+            updateImg();
+            updateDisbled();
+          }
         };
 
         updateDisbled();
         updateImg();
 
-        buttonL.addEventListener("click", function () {
-          currentImg--;
-          updateImg();
-          updateDisbled();
+        buttonL.addEventListener("click", () => {
+          moveL();
         });
 
-        buttonR.addEventListener("click", function () {
-          currentImg++;
-          updateImg();
-          updateDisbled();
+        buttonR.addEventListener("click", () => {
+          moveR();
         });
+
+        const keyboardCallback = async (e) => {
+          switch (e.key) {
+            case "ArrowRight":
+              moveR();
+              break;
+            case "ArrowLeft":
+              moveL();
+              break;
+            case "Escape":
+              await performStateTransition(chapterListState, null);
+              break;
+            default:
+              break;
+          }
+        };
 
         chapterViewEl.appendChild(buttonL);
         chapterViewEl.appendChild(imgWrapper);
         chapterViewEl.appendChild(buttonR);
+        document.addEventListener("keydown", keyboardCallback);
+        chapterViewArrowKeyAndEscapeKeyListener = keyboardCallback;
       });
     }
   );
@@ -215,12 +267,13 @@ async function openChapterView({ title, chapter }) {
 
 async function destroyChapterView() {
   chapterViewEl.replaceChildren([]);
+  document.removeEventListener("keydown", chapterViewArrowKeyAndEscapeKeyListener);
 }
 
 function makeBackButton(parent, cb) {
   const button = document.createElement("label");
   button.onclick = cb;
-  button.id = "chapter-list-close-button";
+  button.id = "back-button";
   button.classList.add("back-button");
   const buttonImg = document.createElement("img");
   buttonImg.src = "./assets/arrow_back.svg";

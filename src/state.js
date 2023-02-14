@@ -159,9 +159,15 @@ function invalidateLibraryView() {
   currentStateValue.libraryViewValid = false;
 }
 
+function is(state) {
+  const { currentStateSymbol } = currentStateValue;
+  return state === currentStateSymbol;
+}
+
 export {
   initState,
   performStateTransition,
+  is,
   chapterListState,
   chapterViewState,
   libraryViewState,
