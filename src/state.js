@@ -5,6 +5,8 @@ import {
   destroyChapterList,
   openChapterView,
   destroyChapterView,
+  openMenu,
+  closeMenu,
 } from "./ui.js";
 
 // The state that the currentStateValue object defaults to
@@ -33,6 +35,7 @@ function initState() {
   currentStateValue = {
     currentStateSymbol: initializationState,
     libraryViewValid: false,
+    menuIsOpen: false,
     hooks: [],
   };
 }
@@ -164,6 +167,18 @@ function is(state) {
   return state === currentStateSymbol;
 }
 
+function toggleMenu() {
+  const { menuIsOpen } = currentStateValue;
+
+  if (menuIsOpen) {
+    closeMenu();
+  } else {
+    openMenu();
+  }
+
+  currentStateValue.menuIsOpen = !menuIsOpen;
+}
+
 export {
   initState,
   performStateTransition,
@@ -171,4 +186,5 @@ export {
   chapterListState,
   chapterViewState,
   libraryViewState,
+  toggleMenu,
 };

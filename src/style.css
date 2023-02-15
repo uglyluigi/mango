@@ -12,6 +12,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  --primary-bg-color: #2f2f2f;
+  --menu-bg-color: #e54b4b;
+  --icon-fill: white;
 }
 
 html {
@@ -25,12 +28,13 @@ html {
 body {
   margin: 0;
   height: 100%;
+  overflow-x: hidden;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
-    background-color: #2f2f2f;
+    background-color: var(--primary-bg-color);
   }
 
   a:hover {
@@ -185,4 +189,74 @@ body {
   margin-left: auto;
   margin-right: 0.5em;
   display: flex;
+}
+
+.slide-over-trans {
+  transition: translate 0.3s ease-out;
+}
+
+.slide-over {
+  translate: 30%;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30%;
+  background-color: var(--menu-bg-color);
+  position: fixed;
+  height: 100%;
+  text-align: center;
+}
+
+#scene-container {
+  background-color: var(--primary-bg-color);
+  box-shadow: 3px 0px black;
+  height: 100%;
+}
+
+#mango-logo {
+  cursor: pointer;
+}
+
+.menu-entry {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border: 1px solid white;
+  margin-bottom: 1em;
+  min-width: 70%;
+  max-width: 70%;
+  white-space: nowrap;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  padding: 0.4em 1.2em 0.4em 1.2em;
+  transition: background-color 0.7s ease, color 0.7s ease,
+    transform 0.2s ease-in-out;
+}
+
+.menu-entry, .menu-entry > * {
+  cursor: pointer;
+}
+
+.below {
+  z-index: -1;
+}
+
+.menu-entry:hover {
+  background-color: white;
+  color: var(--menu-bg-color);
+  transform: translateY(-5px);
+  fill: var(--menu-bg-color);
+}
+
+#chapter-list-container,
+#chapter-view-container,
+#library-container {
+  background-color: var(--primary-bg-color);
+}
+
+#menu-container {
+  box-shadow: inset 0px 0px 8px 0px black;
 }

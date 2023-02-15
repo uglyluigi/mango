@@ -9,6 +9,7 @@ import {
   libraryViewState,
   chapterViewState,
   is,
+  toggleMenu,
 } from "./state.js";
 
 const libraryContainerEl = document.getElementById("library-container");
@@ -53,6 +54,10 @@ function updateElementHiddenAttributes(stateTransition) {
 // Accepting covers from the back-end and
 // creating their img elements on the UI
 async function buildLibraryView() {
+  buildMenu();
+  document.addEventListener("keydown", ({ code } = e) => {
+    if (code === "Space") toggleMenu();
+  });
   let resource_server_url = await get_resource_server_url();
 
   let titles = await get_all_titles();
@@ -77,7 +82,7 @@ async function buildLibraryView() {
 
       const libraryCoverContainer = document.createElement("div");
       libraryCoverContainer.appendChild(imgEl);
-      libraryCoverContainer.classList.add("library-view-cover-container")
+      libraryCoverContainer.classList.add("library-view-cover-container");
 
       coverContainer.appendChild(libraryCoverContainer);
       coverContainer.appendChild(coverTitle);
@@ -90,6 +95,11 @@ async function buildLibraryView() {
       libraryContainerEl.appendChild(coverContainer);
     });
   }
+
+  const icon = document.getElementById("mango-logo");
+  icon.onclick = () => {
+    toggleMenu();
+  };
 }
 
 // Builds the chapter list
@@ -268,7 +278,10 @@ async function openChapterView({ title, chapter }) {
 
 async function destroyChapterView() {
   chapterViewEl.replaceChildren([]);
-  document.removeEventListener("keydown", chapterViewArrowKeyAndEscapeKeyListener);
+  document.removeEventListener(
+    "keydown",
+    chapterViewArrowKeyAndEscapeKeyListener
+  );
 }
 
 function makeBackButton(parent, cb) {
@@ -283,6 +296,46 @@ function makeBackButton(parent, cb) {
   parent.appendChild(button);
 }
 
+function openMenu() {
+  const bod = document.getElementById("scene-container");
+  bod.classList.add("slide-over");
+  let menu = document.getElementById("menu-container");
+  menu.classList.remove("below");
+}
+
+function buildMenu() {
+  const menu = document.getElementById("menu-container");
+  const label = document.createElement("h1");
+
+  label.textContent = "Menu";
+  menu.appendChild(label);
+  makeMenuEntry("Library", menu, async () => {
+    if (!is(libraryViewState)) {
+      await performStateTransition(libraryViewState);
+    }
+    closeMenu();
+  });
+  makeMenuEntry("Search", menu, () => {});
+  makeMenuEntry("Bookmarks", menu, () => {});
+}
+
+function closeMenu() {
+  const bod = document.getElementById("scene-container");
+  bod.classList.remove("slide-over");
+  const menu = document.getElementById("menu-container");
+  menu.classList.add("below");
+}
+
+function makeMenuEntry(labelContent, parent, cb) {
+  const entry = document.createElement("div");
+  const label = document.createElement("label");
+  label.textContent = labelContent;
+  entry.classList.add("menu-entry");
+  entry.appendChild(label);
+  entry.onclick = cb;
+  parent.appendChild(entry);
+}
+
 export {
   updateElementHiddenAttributes,
   buildLibraryView,
@@ -290,4 +343,6 @@ export {
   destroyChapterList,
   openChapterView,
   destroyChapterView,
+  openMenu,
+  closeMenu,
 };
