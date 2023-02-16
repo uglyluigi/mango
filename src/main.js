@@ -1,6 +1,4 @@
-import { initState, libraryViewState, performStateTransition } from "./state.js";
+import { createApp } from "vue";
+import App from "./App.vue";
 
-window.addEventListener("DOMContentLoaded", async () => {
-  initState();
-  await performStateTransition(libraryViewState);
-});
+createApp(App).mount("#app");

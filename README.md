@@ -1,6 +1,24 @@
-![banner for Mango](https://github.com/uglyluigi/mango/blob/master/readme-assets/Mango-banner.png)
+# hello-world
 
+## Project setup
+```
+npm install
+```
 
-Mango is a desktop manga organizer and reader for Windows, macOS, and Linux.
+### Compiles and hot-reloads for development
+```
+npm run serve
+```
 
-Mango aims to be accessible to all desktop users and customizable. If you have a feature request, please consider opening an issue.
+### Compiles and minifies for production
+```
+npm run build
+```
+
+### Lints and fixes files
+```
+npm run lint
+```
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).

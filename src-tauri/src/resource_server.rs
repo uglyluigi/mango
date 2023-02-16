@@ -14,7 +14,7 @@ pub async fn init() {
 
                 Response::builder()
                     .status(StatusCode::OK)
-                    .header("Access-Control-Allow-Origin", "http://127.0.0.1:1430")
+                    .header("Access-Control-Allow-Origin", "http://localhost:8080")
                     .header("Content-Type", "image/jpeg")
                     .header("Content-Length", std::mem::size_of::<u8>() * data.len())
                     .body(data)
@@ -38,7 +38,7 @@ pub async fn init() {
             let bytes = std::fs::read(chapter_image).expect("Failed to get bytes!!!");
 
             Response::builder()
-                .header("Access-Control-Allow-Origin", "http://127.0.0.1:1430")
+                .header("Access-Control-Allow-Origin", "http://localhost:8080")
                 .header("Content-Type", "image/jpeg")
                 .header("Content-Length", std::mem::size_of::<u8>() * bytes.len())
                 .body(bytes)
@@ -52,7 +52,7 @@ pub async fn init() {
                 .expect("Couldn\'t find series");
 
             Response::builder()
-                .header("Access-Control-Allow-Origin", "http://127.0.0.1:1430")
+                .header("Access-Control-Allow-Origin", "http://localhost:8080")
                 .body(format!(
                     "{}",
                     series.chapter(chapter_num).unwrap().image_paths.len()
