@@ -1,15 +1,14 @@
 <template>
-  <Nav></Nav>
-  <LibraryView></LibraryView>
+  <Nav />
+  <router-view></router-view>
 </template>
 
 <script>
-import LibraryView from "./components/library/LibraryView.vue";
-import Nav from "./Nav.vue";
+import Nav from "./components/Nav.vue";
 
 export default {
   name: "App",
-  components: { LibraryView, Nav },
+  components: { Nav },
 };
 </script>
 

@@ -1,7 +1,11 @@
 <template>
   <div class="library-view">
     <template v-for="[title, blobUrl] in imageBlobUrls" :key="title">
-      <LibraryEntry :title="title" :imageUrl="blobUrl"></LibraryEntry>
+      <LibraryEntry
+        @click="libraryEntryClicked(title)"
+        :title="title"
+        :imageUrl="blobUrl"
+      ></LibraryEntry>
     </template>
   </div>
 </template>
@@ -43,6 +47,9 @@ export default {
           this.imageBlobUrls.push([title, url]);
         })
       );
+    },
+    libraryEntryClicked(title) {
+      this.$router.push(`/chapters/${title}`);
     },
   },
 };
