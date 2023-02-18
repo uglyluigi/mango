@@ -1,9 +1,9 @@
 <template>
   <div class="pageButton" @mousedown="click">
-    <div v-if="direction === 'left'">&lt;</div>
-    <div v-else>&gt;</div>
+    <template v-if="direction === 'left'">&lt;</template>
+    <template v-else>&gt;</template>
   </div>
-</template>	
+</template>
 
 <script>
 export default {
@@ -21,8 +21,13 @@ export default {
 
 <style scoped>
 .pageButton {
-	height: 100%;
-	background-color: black;
-	width: 50px;
+  background-color: grey;
+  width: 50px;
+  min-height: 10em;
+  margin-top: auto;
+  margin-bottom: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 </style>

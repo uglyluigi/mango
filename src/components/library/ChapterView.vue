@@ -1,17 +1,31 @@
 <template>
   <template v-if="currentImage !== null">
     <div class="content-container">
-      <PageButton @clicked="clickLeft()" direction="left"></PageButton>
+      <div class="page-status">
+        {{ currentImageNum + 1 }} / {{ this.images.size }}
+      </div>
+      <PageButton
+        class="left"
+        @clicked="clickLeft()"
+        direction="left"
+      ></PageButton>
       <div class="image-container">
         <img :src="currentImage" />
       </div>
-      <PageButton @clicked="clickRight()" direction="right"></PageButton></div
-  ></template>
+      <PageButton
+        class="right"
+        @clicked="clickRight()"
+        direction="right"
+      ></PageButton>
+      <BackButton></BackButton>
+    </div>
+  </template>
 </template>
 
 <script>
 import { get_resource_server_url } from "../../invoke";
 import PageButton from "../PageButton.vue";
+import BackButton from "../BackButton.vue";
 export default {
   name: "ChapterView",
   data() {
@@ -64,15 +78,16 @@ export default {
     },
   },
   computed: {},
-  components: { PageButton },
+  components: { PageButton, BackButton },
 };
 </script>
 
-<style scoped>
+<style>
 .content-container {
   display: flex;
   height: 100%;
   justify-content: space-between;
+  background-color: black;
 }
 
 .image-container {
@@ -83,5 +98,13 @@ export default {
   height: 100%;
   width: 100%;
   object-fit: contain;
+}
+
+.page-status {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  margin: 1em;
+  color: white;
 }
 </style>
