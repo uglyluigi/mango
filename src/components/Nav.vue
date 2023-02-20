@@ -1,5 +1,8 @@
 <template>
-  <div class="nav"><img src="./../assets/mango.png" /></div>
+  <div class="nav">
+    <div class="icon-container"><img src="./../assets/mango.png" /></div>
+    <h1>Mango</h1>
+  </div>
 </template>
 
 <script>
@@ -11,17 +14,33 @@ export default {
 
 <style scoped>
 .nav {
+  position: fixed;
+  top: 0;
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  align-items: center;
   width: 100%;
   height: 50px;
-  background-color: aqua;
+  background-color: #ffca04;
+  box-shadow: 0px 3px 10px gray;
+  margin-bottom: 1em;
+  opacity: 99%;
+}
+
+.icon-container {
+  width: 50px;
+  height: 50px;
 }
 
 img {
   height: 100%;
   width: 100%;
   object-fit: contain;
+}
+
+h1 {
+  padding: 0;
+  margin: 0;
+  color: #5b1b1e;
 }
 </style>

@@ -1,4 +1,5 @@
-use std::io::Write;
+use image::{io::Reader, ImageBuffer, ImageDecoder};
+use std::io::{Cursor, Write};
 use warp::{http::Response, hyper::StatusCode, Filter};
 
 use crate::{categorizer_service::library::LIBRARY, config};
@@ -10,7 +11,18 @@ pub async fn init() {
         match LIBRARY.series_by_name(decode_series_name(series_name)) {
             Some(serie) => {
                 let cover = &serie.covers[0];
-                let data = std::fs::read(&cover.path).expect("Failed to get bytes");
+
+                let img = Reader::open(&cover.path)
+                    .expect("Couldn't read")
+                    .decode()
+                    .expect("Couldn't decode");
+
+                let img = img.resize_exact(300, 300, image::imageops::FilterType::Nearest);
+
+                let mut data = vec![];
+
+                img.write_to(&mut Cursor::new(&mut data), image::ImageOutputFormat::Jpeg(0))
+                    .expect(" ");
 
                 Response::builder()
                     .status(StatusCode::OK)
@@ -83,7 +95,6 @@ pub async fn init() {
     println!("Shutting down warp server");
     std::io::stdout().flush().unwrap();
 }
-
 
 fn decode_series_name(name: String) -> String {
     urlencoding::decode(&name).unwrap().into_owned()

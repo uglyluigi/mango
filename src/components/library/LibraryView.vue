@@ -1,10 +1,11 @@
 <template>
   <div class="library-view">
-    <template v-for="[title, blobUrl] in imageBlobUrls" :key="title">
+    <template v-for="([title, blobUrl], index) in imageBlobUrls" :key="title">
       <LibraryEntry
         @click="libraryEntryClicked(title)"
         :title="title"
         :imageUrl="blobUrl"
+        :ordinal="index + 1"
       ></LibraryEntry>
     </template>
   </div>
@@ -57,8 +58,10 @@ export default {
 
 <style scoped>
 .library-view {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  background-color: rgb(0, 152, 134);
+  align-items: center;
 }
 </style>

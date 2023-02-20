@@ -24,7 +24,6 @@ export default {
 
 body {
   margin: 0;
-  max-height: 100vh;
   width: 100%;
   display: flex;
 }
