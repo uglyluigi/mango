@@ -1,8 +1,15 @@
 use image::{io::Reader, ImageBuffer, ImageDecoder};
+use serde::Serialize;
 use std::io::{Cursor, Write};
 use warp::{http::Response, hyper::StatusCode, Filter};
 
 use crate::{categorizer_service::library::LIBRARY, config};
+
+#[derive(Serialize)]
+struct _HW {
+    h: usize,
+    w: usize,
+}
 
 pub async fn init() {
     println!("Starting warp server");
@@ -17,12 +24,13 @@ pub async fn init() {
                     .decode()
                     .expect("Couldn't decode");
 
-                let img = img.resize_exact(300, 300, image::imageops::FilterType::Nearest);
-
                 let mut data = vec![];
 
-                img.write_to(&mut Cursor::new(&mut data), image::ImageOutputFormat::Jpeg(0))
-                    .expect(" ");
+                img.write_to(
+                    &mut Cursor::new(&mut data),
+                    image::ImageOutputFormat::Jpeg(255),
+                )
+                .expect(" ");
 
                 Response::builder()
                     .status(StatusCode::OK)
@@ -72,7 +80,31 @@ pub async fn init() {
         })
         .or(get_chapter_images);
 
-    let (_, server) = warp::serve(get_num_of_chapter_images)
+    let get_cover_dimensions = warp::path!("cover_dimensions" / String)
+        .map(|series_name: String| {
+            let series = LIBRARY.series_by_name(decode_series_name(series_name));
+
+            match series {
+                Some(ser) => {
+                    let img_size =
+                        imagesize::size(&ser.covers[0].path).expect("Failed to get image size");
+
+                    Response::builder()
+                        .header("Access-Control-Allow-Origin", "http://localhost:8080")
+                        .body(serde_json::to_string(&_HW {
+                            h: img_size.height,
+                            w: img_size.width,
+                        }).unwrap())
+                }
+                None => Response::builder()
+                    .status(404)
+                    .header("Access-Control-Allow-Origin", "http://localhost:8080")
+                    .body("".to_owned()),
+            }
+        })
+        .or(get_num_of_chapter_images);
+
+    let (_, server) = warp::serve(get_cover_dimensions)
         .tls()
         .cert_path("./tls/Mango.crt")
         .key_path("./tls/Mango.key")

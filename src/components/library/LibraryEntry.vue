@@ -9,15 +9,17 @@
       <div>Tags: Cool, Nice, Silly</div>
     </div>
     <div class="image-container">
-      <img :src="imageUrl" />
+      <ARImage :width="300" :src="imageUrl"></ARImage>
     </div>
   </div>
 </template>
 
 <script>
+import ARImage from "../etc/ARImage.vue";
+
 export default {
   name: "LibraryEntry",
-  components: {},
+  components: { ARImage },
   props: {
     imageUrl: {
       type: String,
@@ -25,10 +27,6 @@ export default {
     },
     title: {
       type: String,
-      required: true,
-    },
-    ordinal: {
-      type: Number,
       required: true,
     },
   },
@@ -47,34 +45,9 @@ export default {
   max-height: 50%;
 }
 
-.image-container {
-  width: 100%;
-  height: 90%;
-}
-
-img {
-  object-fit: contain;
-  height: 100%;
-}
-
 .library-entry-title {
   font-family: "Varela Round";
   font-size: 3rem;
-}
-
-.ordinal {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.ordinal-container {
-  background-color: #2bc29f;
-  width: 50%;
-  aspect-ratio: 1/1;
-  border-radius: 50%;
-  font: "Varela Round";
-  color: rgb(253, 254, 238);
 }
 
 .entry-info {
