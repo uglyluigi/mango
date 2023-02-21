@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import { get_chapter_list } from "../../invoke";
-import BackButton from "../BackButton.vue";
+import { get_chapter_list } from "@/invoke";
+import BackButton from "@/components/BackButton.vue";
 export default {
   name: "ChapterView",
   created() {

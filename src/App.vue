@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import Nav from "./components/Nav.vue";
+import Nav from "@/components/Nav.vue";
 
 export default {
   name: "App",
@@ -13,12 +13,14 @@ export default {
 </script>
 
 <style>
+@import "./assets/styles/theme.css";
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: var(--font-color);
   width: 100%;
 }
 

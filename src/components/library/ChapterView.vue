@@ -23,9 +23,9 @@
 </template>
 
 <script>
-import { get_resource_server_url } from "../../invoke";
-import PageButton from "../PageButton.vue";
-import BackButton from "../BackButton.vue";
+import { get_resource_server_url } from "@/invoke";
+import PageButton from "@/components/PageButton.vue";
+import BackButton from "@/components/BackButton.vue";
 export default {
   name: "ChapterView",
   data() {

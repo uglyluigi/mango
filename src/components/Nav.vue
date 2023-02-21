@@ -8,7 +8,6 @@
 <script>
 export default {
   name: "App",
-  components: {},
 };
 </script>
 
@@ -21,7 +20,7 @@ export default {
   align-items: center;
   width: 100%;
   height: 50px;
-  background-color: #ffca04;
+  background-color: var(--accent-bg);
   box-shadow: 0px 3px 10px gray;
   margin-bottom: 1em;
   opacity: 99%;
@@ -41,6 +40,6 @@ img {
 h1 {
   padding: 0;
   margin: 0;
-  color: #5b1b1e;
+  color: var(--accent-font-color);
 }
 </style>

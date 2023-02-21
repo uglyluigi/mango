@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import XIcon from "./icon/XIcon.vue";
+import XIcon from "@/components/icon/XIcon.vue";
 
 export default {
   name: "BackButton",

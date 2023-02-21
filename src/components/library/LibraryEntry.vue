@@ -1,11 +1,11 @@
 <template>
   <div class="library-entry">
+    <div class="library-entry-title">
+      {{ title }}
+    </div>
     <div class="library-entry-info">
-      <div class="library-entry-title">
-        {{ title }}
-      </div>
-      <div>Unread</div>
-      <div>Chapters: 69</div>
+      <div class="read-status">{{ readOrUnread }}</div>
+      <div>Chapters: {{ numChapters }}</div>
       <div>Tags: Cool, Nice, Silly</div>
     </div>
     <div class="image-container">
@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import ARImage from "../etc/ARImage.vue";
+import ARImage from "@/components/etc/ARImage.vue";
 
 export default {
   name: "LibraryEntry",
@@ -29,6 +29,14 @@ export default {
       type: String,
       required: true,
     },
+    read: Boolean,
+    numChapters: Number,
+    tags: Array,
+  },
+  computed: {
+    readOrUnread() {
+      return this.read ? `Read` : `Unread`;
+    },
   },
 };
 </script>
@@ -39,24 +47,34 @@ export default {
   flex-direction: column;
   grid-template-columns: 0.5fr 0.5fr;
   justify-content: space-between;
-  background-color: rgb(253, 254, 238);
+  background-color: var(--secondary-bg);
   border-radius: 8px;
   margin-bottom: 3em;
-  max-height: 50%;
+  width: 80%;
+  height: 80%;
+  max-width: 800px;
+  padding: 1em;
 }
 
 .library-entry-title {
   font-family: "Varela Round";
   font-size: 3rem;
-}
-
-.entry-info {
-  display: flex;
-  align-items: center;
+  grid-column: 1 / 3;
+  padding: 0.3em;
 }
 
 .library-entry-info {
   margin: auto;
   word-break: break-word;
+  font-size: 1.2m;
+  color: black;
+  padding: 1em;
+  border-radius: 8px;
+}
+
+.read-status {
+  background-color: var(--primary-bg);
+  border-radius: 8px;
+  padding: 0.3em 0em 0.3em 0em;
 }
 </style>

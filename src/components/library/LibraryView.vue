@@ -13,7 +13,7 @@
 
 <script>
 import { get_resource_server_url, get_all_titles } from "@/invoke";
-import LibraryEntry from "./LibraryEntry.vue";
+import LibraryEntry from "@/components/library/LibraryEntry.vue";
 
 export default {
   name: "LibraryView",
@@ -61,7 +61,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: rgb(0, 152, 134);
+  background-color: var(--primary-bg);
   align-items: center;
 }
 </style>
