@@ -10,8 +10,8 @@
 export default {
   name: "ARImage",
   props: {
-    height: Number,
-    width: Number,
+    height: String,
+    width: String,
     src: {
       type: String,
       required: true,
@@ -19,10 +19,10 @@ export default {
   },
   computed: {
     heightProp() {
-      return this.height ? `${this.height}px` : "auto";
+      return this.height ? `${this.height}` : "auto";
     },
     widthProp() {
-      return this.width ? `${this.width}px` : "auto";
+      return this.width ? `${this.width}` : "auto";
     },
   },
 };
@@ -40,6 +40,6 @@ export default {
 img {
   width: 100%;
   height: 100%;
-  object-fit: fill;
+  object-fit: contain;
 }
 </style>

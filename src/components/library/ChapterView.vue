@@ -10,7 +10,7 @@
         direction="left"
       ></PageButton>
       <div class="image-container">
-        <ARImage :src="currentImage"/>
+        <ARImage :src="currentImage" height="100vh" />
       </div>
       <PageButton
         class="right"
@@ -93,6 +93,7 @@ export default {
 }
 
 .image-container {
+  width: 100%;
 }
 
 .page-status {

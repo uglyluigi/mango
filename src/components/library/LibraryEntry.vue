@@ -9,7 +9,7 @@
       <div>Tags: Cool, Nice, Silly</div>
     </div>
     <div class="image-container">
-      <ARImage :width="300" :src="imageUrl"></ARImage>
+      <ARImage width="300px" :src="imageUrl"></ARImage>
     </div>
   </div>
 </template>
