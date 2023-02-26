@@ -34,7 +34,13 @@ export default {
   justify-content: space-between;
   max-height: v-bind(heightProp);
   max-width: v-bind(widthProp);
+  height: v-bind(heightProp);
+  width: v-bind(widthProp);
   margin: auto;
+}
+
+.centerer {
+  margin: 0 auto 0 auto;
 }
 
 img {
