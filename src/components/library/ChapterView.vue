@@ -10,7 +10,7 @@
         direction="left"
       ></PageButton>
       <div class="image-container">
-        <img :src="currentImage" />
+        <ARImage :src="currentImage"/>
       </div>
       <PageButton
         class="right"
@@ -26,6 +26,8 @@
 import { get_resource_server_url } from "@/invoke";
 import PageButton from "@/components/PageButton.vue";
 import BackButton from "@/components/BackButton.vue";
+import ARImage from "@/components/etc/ARImage.vue";
+
 export default {
   name: "ChapterView",
   data() {
@@ -78,7 +80,7 @@ export default {
     },
   },
   computed: {},
-  components: { PageButton, BackButton },
+  components: { PageButton, BackButton, ARImage },
 };
 </script>
 
@@ -91,13 +93,6 @@ export default {
 }
 
 .image-container {
-  width: 100%;
-}
-
-.image-container > img {
-  height: 100%;
-  width: 100%;
-  object-fit: contain;
 }
 
 .page-status {
